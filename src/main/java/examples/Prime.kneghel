@@ -1,0 +1,29 @@
+class Prime {
+    fun isPrime(number) {
+        if number <= 1 {
+            return false
+        }
+        prime = true
+        i = 2
+        while i < number && prime {
+            if number % i == 0 {
+                prime = false
+            }
+            i = i + 1
+        }
+        return prime
+    }
+
+    fun main(args) {
+        N = int(args[0])
+        current = 2
+        count = 0
+        while count < N {
+            if isPrime(current) {
+                println(current)
+                count = count + 1
+            }
+            current = current + 1
+        }
+    }
+}
