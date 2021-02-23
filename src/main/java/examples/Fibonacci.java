@@ -1,3 +1,5 @@
+package examples;
+
 public class Fibonacci {
 
     public static void fibonacci(int a, int b, int N) {

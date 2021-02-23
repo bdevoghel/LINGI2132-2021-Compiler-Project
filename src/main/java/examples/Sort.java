@@ -1,3 +1,5 @@
+package examples;
+
 public class Sort {
 
     public static void swap(int [] a, int i, int j) {

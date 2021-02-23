@@ -1,3 +1,5 @@
+package parser;
+
 import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
 import parser.Parser;

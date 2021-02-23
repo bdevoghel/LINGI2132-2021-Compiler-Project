@@ -9,7 +9,7 @@ import norswap.autumn.positions.LineMapString;
 public final class Parser extends Grammar {
     { ws = usual_whitespace; }
 
-    public rule variable = alphanum.at_least(5)
+    public rule variable = alphanum.at_least(1)
             .push($ -> $.str()); // TODO : edge cases
 
     public rule integer = seq(opt('-'), choice('0', digit.at_least(1)))
