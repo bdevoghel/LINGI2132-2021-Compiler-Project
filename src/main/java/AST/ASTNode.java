@@ -1,3 +1,8 @@
 package AST;
 
-public interface ASTNode {}
+public interface ASTNode {
+
+    @Override
+    boolean equals(Object obj);
+
+}

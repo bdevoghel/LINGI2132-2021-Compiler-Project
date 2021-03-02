@@ -1,21 +1,12 @@
 package parser;
 
+import AST.IntegerNode;
 import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
-import parser.Parser;
 
-public class ParserTests extends TestFixture {
+public class KneghelParserTests extends TestFixture {
 
-    Parser parser = new Parser();
-
-    @Test
-    public void testNone() {
-        this.rule = parser.root;
-        success("1");
-        success(" ");
-        success("");
-        failure("not ok");
-    }
+    KneghelParser parser = new KneghelParser();
 
     @Test
     public void testInteger() {
@@ -25,6 +16,9 @@ public class ParserTests extends TestFixture {
         success("- 5");
         success("1234");
         failure("ab");
+        successExpect("1", new IntegerNode(1));
+        successExpect("-1", new IntegerNode(-1));
+        successExpect("- 1", new IntegerNode(-1));
     }
 
     @Test
@@ -40,13 +34,15 @@ public class ParserTests extends TestFixture {
         success("true");
         success("True");
         success("false");
-        success("False");        success("false");
+        success("False");
+        success("false");
         success("tHiSALsowORKs");
     }
 
     @Test
     public void testAddition() {
         this.rule = parser.addition;
+        success("1+2");
         success("1 + 2");
         success("-5+ 2");
         success("- 5 - 2");
@@ -68,7 +64,6 @@ public class ParserTests extends TestFixture {
         failure(" 5 ** 2");
         failure(" 5 / / 2");
         failure(" 5 */ 2");
-
     }
 
     @Test
@@ -93,7 +88,9 @@ public class ParserTests extends TestFixture {
 
     @Test
     public void testComment() {
-        this.rule = parser.comment;
+        this.rule = parser.ws;
+        success("// comment");
+        success(" // comment");
         success("// comment\n");
         success("//comment\n");
         failure("/notcomment\n");
@@ -106,19 +103,31 @@ public class ParserTests extends TestFixture {
         success("// comment \n // comment\n");
     }
 
+//    @Test
+//    public void testCommentAsRoot() {
+//        this.rule = parser.root;
+//        success("1 # comment\n");
+//        success("1# comment\n");
+//        success("1 #comment\n");
+//        success("1 //comment \n 1+1");
+//        failure("1 /notcomment\n");
+//        success("1+1 /* comment */");
+//        success("1+1 \n /* comment */ 1+1");
+//        success("1+1 \n /* comment */ \n 1+1");
+//        success("abc /* comment \n hey */ ab ");
+//        failure("/* ");
+//        success("1 // comment \n // comment\n");
+//    }
+
     @Test
-    public void testCommentAsRoot() {
-        this.rule = parser.root;
-        success("1 # comment\n");
-        success("1# comment\n");
-        success("1 #comment\n");
-        success("1 //comment \n 1+1");
-        failure("1 /notcomment\n");
-        success("1+1 /* comment */");
-        success("1+1 \n /* comment */ 1+1");
-        success("1+1 \n /* comment */ \n 1+1");
-        success("abc /* comment \n hey */ ab ");
-        failure("/* ");
-        success("1 // comment \n // comment\n");
+    public void testVarDef(){
+        this.rule = parser.variableDefinition;
+        success("a = 1");
+        success("a=1");
+        success("abc = 1");
+        success("abc = a");
+        success("a = 1 + 2");
+        success("a = 1 / 2");
+        failure("a = // hey");
     }
 }
