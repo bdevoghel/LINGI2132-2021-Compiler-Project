@@ -57,9 +57,11 @@ public final class KneghelParser extends Grammar {
     public rule integer = seq(opt(MINUS), choice('0', digit.at_least(1)))
             .push($ -> new IntegerNode(Integer.parseInt($.str().replaceAll("\\s+",""))));
 
-    public rule bool = choice(_true, _false);
+    public rule bool = choice(_true, _false)
+            .push($ -> new BooleanNode(Boolean.parseBoolean($.str())));
 
-    public rule value = choice(integer, bool, variable).word();
+    public rule value = choice(integer, bool, variable).word()
+            .push($ -> $.$list().size() > 1 ? new ValueNode($.$0()): new ValueNode($.$1(), true));
 
     // EXPRESSIONS
 

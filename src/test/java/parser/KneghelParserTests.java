@@ -1,6 +1,8 @@
 package parser;
 
+import AST.BooleanNode;
 import AST.IntegerNode;
+import AST.ValueNode;
 import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
 
@@ -37,6 +39,7 @@ public class KneghelParserTests extends TestFixture {
         success("False");
         success("false");
         success("tHiSALsowORKs");
+        successExpect("true", new ValueNode("true"));
     }
 
     @Test
@@ -84,6 +87,8 @@ public class KneghelParserTests extends TestFixture {
         failure("truefalse");
         failure("falsetrue");
         failure("True");
+        successExpect("true", new BooleanNode(true));
+        successExpect("false", new BooleanNode(false));
     }
 
     @Test
