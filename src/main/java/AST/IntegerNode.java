@@ -14,4 +14,9 @@ public class IntegerNode implements ASTNode {
         IntegerNode other = (IntegerNode) obj;
         return this.value == other.value;
     }
+
+    @Override
+    public String toString() {
+        return "IntegerNode:" + value;
+    }
 }
