@@ -61,7 +61,11 @@ public final class KneghelParser extends Grammar {
     public rule BACKSLASH = word("\\");
 
     public rule OPENBRACE = word("{");
+    public rule OPENPARENT = word("(");
     public rule CLOSEBRACE = word("}");
+    public rule CLOSEPARENT = word(")");
+
+    public rule COMMA = word(",");
 
     public rule _true = reserved("true")    .as_val(true);
     public rule _false = reserved("false")  .as_val(false);
@@ -167,6 +171,10 @@ public final class KneghelParser extends Grammar {
     public rule whileStatement = seq(_while, logicExpression, statement)
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
+    public rule functionStatement = seq(_fun,
+            OPENPARENT, identifier.opt(), seq(COMMA, identifier).at_least(0), CLOSEPARENT,
+            OPENBRACE, statement, CLOSEBRACE) // TODO
+            .push($ -> null);
 
     public rule root = seq(ws, choice(statement, expression));
 
