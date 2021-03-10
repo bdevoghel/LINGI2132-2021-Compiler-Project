@@ -13,6 +13,7 @@ import norswap.autumn.actions.StackPush;
 import norswap.autumn.positions.LineMapString;
 
 import static AST.BinaryOperator.*;
+import static AST.UnaryOperator.*;
 
 public final class KneghelParser extends Grammar {
 
@@ -55,7 +56,7 @@ public final class KneghelParser extends Grammar {
     public rule BAR = word("|");
     public rule AMPAMP = word("&&");
     public rule BARBAR = word("||");
-    public rule NOT = word("!");
+    public rule EXCLAM = word("!");
     public rule QUOTE = word("\"");
     public rule BACKSLASH = word("\\");
 
@@ -75,7 +76,12 @@ public final class KneghelParser extends Grammar {
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
             .push($ -> new IdentifierNode($.str()));
 
+
     // Literal
+//    public rule neg = choice(seq(MINUS, choice(integer, identifier).ahead()), seq(NOT, choice(bool, identifier).ahead()))
+//            .push($ -> new NegationNode($.str()));
+//    public rule minus =
+
     public rule integer = seq(opt(MINUS), choice('0', digit.at_least(1)))
             .push($ -> new IntegerNode(Integer.parseInt($.str().replaceAll("\\s+",""))));
 
@@ -83,16 +89,23 @@ public final class KneghelParser extends Grammar {
             .push($ -> new BooleanNode(Boolean.parseBoolean($.str())));
 
     public rule notStringEnd = seq(QUOTE.not(), any);
-    public rule string = seq(QUOTE, notStringEnd.at_least(0), QUOTE) // TODO to modify (see norswap.java)
-            .push($ -> new StringNode($.str()));
+    public rule string = seq("\"", notStringEnd.at_least(0), "\"") // TODO to modify (see norswap.java)
+            .push($ -> {
+                String s = $.str();
+                return new StringNode(s.substring(1, s.length()-1)); // slice String without quotes
+            });
 
-    public rule value = choice(integer, bool, identifier, string).word();
+    public rule value = choice(integer, bool, identifier, string, _null).word();
 
 
     // EXPRESSIONS
 
     StackPush pushBinaryExpression = $ -> new BinaryExpressionNode($.$0(), $.$1(), $.$2());
+    StackPush pushUnaryExpression = $ -> new UnaryExpressionNode($.$0(), $.$1());
 
+    public rule prefixOp = choice(
+            MINUS   .as_val(NEG),
+            EXCLAM  .as_val(NOT));
     public rule multOp = choice(
             MUL     .as_val(MULTIPLY),
             DIV     .as_val(DIVIDE),
@@ -108,8 +121,12 @@ public final class KneghelParser extends Grammar {
             NEQ     .as_val(NOT_EQUAL),
             EQEQ    .as_val(EQUAL));
 
+    public rule prefixExpression = right_expression()
+            .prefix(prefixOp, pushUnaryExpression)
+            .right(value);
+
     public rule multiplicationExpression = left_expression()
-            .operand(value)
+            .operand(prefixExpression)
             .infix(multOp, pushBinaryExpression);
 
     public rule additionExpression = left_expression()
@@ -130,26 +147,28 @@ public final class KneghelParser extends Grammar {
 
     public rule logicExpression = choice(logicOrExpression, bool);
 
-//    public rule neg = choice(seq(MINUS, choice(integer, identifier).ahead()), seq(NOT, choice(bool, identifier).ahead()))
-//            .push($ -> new NegationNode($.str()));
-
     public rule expression = choice(logicExpression); // TODO simplify ??
 
     public rule variableDefinition = seq(identifier, EQ, expression)
-            .push($ -> new VariableDefinitionNode($.$0(), $.$1()));
+            .push($ -> new AssignmentNode($.$0(), $.$1()));
 
-    public rule elseIfStatement = seq(_else, _if, OPENBRACE, variableDefinition, CLOSEBRACE); // TODO modify variableDefinition
-    public rule elseStatement = seq(_else, OPENBRACE, variableDefinition, CLOSEBRACE); // TODO modify variableDefinition
+    public rule block = lazy(() -> seq(OPENBRACE, this.statement.at_least(0), CLOSEBRACE));
 
-    public rule ifStatement = seq(_if, logicExpression,
-            OPENBRACE, variableDefinition, CLOSEBRACE, // TODO modify variableDefinition
-            elseIfStatement.at_least(0),
-            elseStatement.opt());
-    // TODO parse to AST
+    public rule statement = lazy(() -> choice(
+            variableDefinition,
+            block,
+            this.ifStatement,
+            this.whileStatement,
+            this.functionStatement)); // TODO to complete ?
 
-//    public rule statement = choice(ifStatement, variableDefinition); // NOTE ??
+    public rule ifStatement = seq(_if, logicExpression, statement, seq(_else, statement).or_push_null())
+            .push($ -> new IfStatementNode($.$0(), $.$1(), $.$2()));
 
-    public rule root = seq(opt(ws), expression);
+    public rule whileStatement = seq(_while, logicExpression, statement)
+            .push($ -> new WhileStatementNode($.$0(), $.$1()));
+
+
+    public rule root = seq(ws, choice(statement, expression));
 
     @Override public rule root() {
         return root;

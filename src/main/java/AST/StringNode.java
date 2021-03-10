@@ -1,6 +1,6 @@
 package AST;
 
-public class StringNode implements ASTNode {
+public class StringNode implements ExpressionNode {
     private String value;
 
     public StringNode(String value) {

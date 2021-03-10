@@ -1,6 +1,6 @@
 package AST;
 
-public class BinaryExpressionNode implements ASTNode {
+public class BinaryExpressionNode implements ExpressionNode {
     private BinaryOperator operator;
     private ASTNode leftChild;
     private ASTNode rightChild;
@@ -24,6 +24,6 @@ public class BinaryExpressionNode implements ASTNode {
 
     @Override
     public String toString() {
-        return "BinaryExpressionNode:" + leftChild.toString() + operator.toString() + rightChild.toString();
+        return "BinaryExpressionNode:" + leftChild + operator + rightChild;
     }
 }

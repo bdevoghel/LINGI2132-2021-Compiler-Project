@@ -1,6 +1,6 @@
 package AST;
 
-public class IntegerNode implements ASTNode {
+public class IntegerNode implements ExpressionNode {
     private int value;
 
     public IntegerNode(int value) {

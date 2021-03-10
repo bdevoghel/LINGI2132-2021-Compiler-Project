@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
 
 import static AST.BinaryOperator.*;
+import static AST.UnaryOperator.*;
 
 public class KneghelParserTests extends TestFixture {
 
@@ -27,13 +28,12 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testStrings() {
         this.rule = parser.string;
-        success("\"abc\"");
-        success("\"a b c\"");
-        success("\"\"");
+        successExpect("\"abc\"", new StringNode("abc"));
+        successExpect("\" a b c \"", new StringNode(" a b c "));
+        successExpect("\"\"", new StringNode(""));
         failure("\"\"\"");
 //        success("\"\\\"\""); // TODO implement
 //        failure("\"a\nb\""); // TODO implement
-        successExpect("\"abc\"", new StringNode("\"abc\""));
     }
 
     @Test
@@ -51,15 +51,19 @@ public class KneghelParserTests extends TestFixture {
 
     @Test
     public void testValues() {
-        this.rule = parser.value;
+        this.rule = parser.prefixExpression; // value = choice(integer, bool, identifier, string) with (optional) prefix
         success("1");
         success("-1");
+        successExpect("- 1", new UnaryExpressionNode(NEG, new IntegerNode(1)));
         success("a");
         success("-a");
+        successExpect("- a", new UnaryExpressionNode(NEG, new IdentifierNode("a")));
         success("true");
         success("!true");
+        successExpect("! true", new UnaryExpressionNode(NOT, new BooleanNode(true)));
         success("\"a\"");
-        // TODO complete with negative variables etc etc
+//        failure("- \"a\""); // TODO make this fail
+//        failure("! \"a\"");
     }
 
     @Test
@@ -97,8 +101,8 @@ public class KneghelParserTests extends TestFixture {
         failure("1 = 1");
         failure("true = 1");
         failure("if = 1");
-        successExpect("a = 1", new VariableDefinitionNode(new IdentifierNode("a"), new IntegerNode(1)));
-        successExpect("a = true", new VariableDefinitionNode(new IdentifierNode("a"), new BooleanNode(true)));
+        successExpect("a = 1", new AssignmentNode(new IdentifierNode("a"), new IntegerNode(1)));
+        successExpect("a = true", new AssignmentNode(new IdentifierNode("a"), new BooleanNode(true)));
     }
 
     @Test
@@ -174,24 +178,93 @@ public class KneghelParserTests extends TestFixture {
     public void testAdvancedVarDef() {
         this.rule = parser.variableDefinition;
 //        failure("a = true * 5 + \"coucou\"");
-        successExpect("a = 1 + 2 * 3", new VariableDefinitionNode(new IdentifierNode("a"), new BinaryExpressionNode(new IntegerNode(1), ADD, new BinaryExpressionNode(new IntegerNode(2), MULTIPLY, new IntegerNode(3)))));
-        successExpect("a = false || true && true", new VariableDefinitionNode(new IdentifierNode("a"), new BinaryExpressionNode(new BooleanNode(false), OR, new BinaryExpressionNode(new BooleanNode(true), AND, new BooleanNode(true)))));
+        successExpect("a = null", new AssignmentNode(new IdentifierNode("a"), null));
+        successExpect("a = 1 + 2 * 3", new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new IntegerNode(1), ADD, new BinaryExpressionNode(new IntegerNode(2), MULTIPLY, new IntegerNode(3)))));
+        successExpect("a = false || true && true", new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new BooleanNode(false), OR, new BinaryExpressionNode(new BooleanNode(true), AND, new BooleanNode(true)))));
+        // TODO complete
     }
 
     @Test
-    public void testLogicExpression() {
-        this.rule = parser.logicExpression;
+    public void testExpression() {
+        this.rule = parser.expression;
         success("1 == 2");
+        success("1== 2");
+        success("1 ==2");
         success("1 != 2");
         success("1 > 2");
         success("1 < 2");
         success("1 >= 2");
         success("1 <= 2");
+
+        success("a <= b");
+        success("a != 1");
+        success("a == \"hello\"");
+        success("a + b * c");
+
+        success("false && true");
+        success("false || true");
+        success("false && true || false");
+        success("false || true && false");
+
+        success("a || true && b");
+
+        successExpect("1 + 2 <= 3 * 4", new BinaryExpressionNode(new BinaryExpressionNode(new IntegerNode(1), ADD, new IntegerNode(2)), LESS_OR_EQUAL, new BinaryExpressionNode(new IntegerNode(3), MULTIPLY, new IntegerNode(4))));
+        successExpect("false || 1 + 2 * 3 <= 4 && true",
+                new BinaryExpressionNode(
+                        new BooleanNode(false),
+                        OR,
+                        new BinaryExpressionNode(
+                                new BinaryExpressionNode(
+                                        new BinaryExpressionNode(
+                                                new IntegerNode(1),
+                                                ADD,
+                                                new BinaryExpressionNode(
+                                                        new IntegerNode(2),
+                                                        MULTIPLY,
+                                                        new IntegerNode(3))),
+                                        LESS_OR_EQUAL,
+                                        new IntegerNode(4)),
+                                AND ,
+                                new BooleanNode(true))));
     }
 
     @Test
     public void testConditions() {
         this.rule = parser.ifStatement;
-        success("if 1 == 2 { a=2 }");
+        successExpect("if 1 == 2 { a=3 }", new IfStatementNode(new BinaryExpressionNode(new IntegerNode(1), EQUAL, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3))));
+        successExpect("if true { a=2 } else { a=3 }", new IfStatementNode(new BooleanNode(true), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3))));
+        successExpect("if a == 1 { a=2 } else if a { a=3 }",
+                new IfStatementNode(
+                        new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IntegerNode(1)),
+                        new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)),
+                        new IfStatementNode(
+                                new IdentifierNode("a"),
+                                new AssignmentNode(
+                                    new IdentifierNode("a"),
+                                    new IntegerNode(3)))));
+        success("if a == 1 { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
+        successExpect("if a == 1 { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" } else { a = null }",
+                new IfStatementNode(
+                        new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IntegerNode(1)),
+                        new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)),
+                        new IfStatementNode(
+                                new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new BooleanNode(true)),
+                                new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3)),
+                                new IfStatementNode(
+                                        new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new StringNode("hello")),
+                                        new AssignmentNode(new IdentifierNode("a"), new StringNode("world")),
+                                        new AssignmentNode(new IdentifierNode("a"), null)))));
+        success("if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
+        failure("if a == 1 a=2 b=2 else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
+        failure("if { a == 1 } { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
+        // TODO complete with failures
+    }
+
+    @Test
+    public void testWhileLoops() {
+        this.rule = parser.whileStatement;
+        successExpect("while 1 > 2 { a = b }", new WhileStatementNode(new BinaryExpressionNode(new IntegerNode(1), GREATER_THAN, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IdentifierNode("b"))));
+        successExpect("while true { a = b + 1 }", new WhileStatementNode(new BooleanNode(true), new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new IdentifierNode("b"), ADD, new IntegerNode(1)))));
+        // TODO complete with more tests
     }
 }
