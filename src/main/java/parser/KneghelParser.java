@@ -62,8 +62,10 @@ public final class KneghelParser extends Grammar {
 
     public rule OPENBRACE = word("{");
     public rule OPENPARENT = word("(");
+    public rule OPENBRACKET = word("[");
     public rule CLOSEBRACE = word("}");
     public rule CLOSEPARENT = word(")");
+    public rule CLOSEBRACKET = word("]");
 
     public rule COMMA = word(",");
 
@@ -75,6 +77,8 @@ public final class KneghelParser extends Grammar {
     public rule _else = reserved("else");
     public rule _while = reserved("while");
     public rule _fun = reserved("fun");
+    public rule _return = reserved("return");
+    public rule _print = reserved("print");
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
@@ -151,6 +155,9 @@ public final class KneghelParser extends Grammar {
 
     public rule logicExpression = choice(logicOrExpression, bool);
 
+    public rule arrayMapAccessExpression = lazy(() -> seq(this.expression, OPENBRACKET, this.expression, CLOSEBRACKET))
+            .push($ -> new ArrayMapAccessNode($.$0(), $.$1())); // TODO where to integrate in expression ??
+
     public rule expression = choice(logicExpression); // TODO simplify ??
 
     public rule variableDefinition = seq(identifier, EQ, expression)
@@ -159,11 +166,11 @@ public final class KneghelParser extends Grammar {
     public rule block = lazy(() -> seq(OPENBRACE, this.statement.at_least(0), CLOSEBRACE));
 
     public rule statement = lazy(() -> choice(
-            variableDefinition,
             block,
+            variableDefinition,
             this.ifStatement,
             this.whileStatement,
-            this.functionStatement)); // TODO to complete ?
+            this.functionStatement));
 
     public rule ifStatement = seq(_if, logicExpression, statement, seq(_else, statement).or_push_null())
             .push($ -> new IfStatementNode($.$0(), $.$1(), $.$2()));
@@ -171,10 +178,23 @@ public final class KneghelParser extends Grammar {
     public rule whileStatement = seq(_while, logicExpression, statement)
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
-    public rule functionStatement = seq(_fun,
-            OPENPARENT, identifier.opt(), seq(COMMA, identifier).at_least(0), CLOSEPARENT,
-            OPENBRACE, statement, CLOSEBRACE) // TODO
-            .push($ -> null);
+    public rule functionBody = seq(OPENBRACE, statement.at_least(0))
+            .push($ -> $.$list());
+
+    public rule functionArguments = seq(OPENPARENT, identifier.opt(), seq(COMMA, identifier).at_least(0), CLOSEPARENT) // TODO seq COMMA => separatedBy .... (autunm)
+            .push($ -> new FunctionArgumentsNode($.$list()));
+
+    public rule functionHeader = seq(_fun, identifier, functionArguments)
+            .push($ -> new FunctionStatementNode($.$0(), $.$1()));
+
+    public rule functionStatement = seq(functionHeader, functionBody, _return, expression, CLOSEBRACE)
+            .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()).setReturnExpression($.$2()));
+
+    public rule functionCallExpression = seq(identifier, functionArguments)
+            .push($ -> new FunctionCallNode($.$0(), $.$1())); // TODO where to integrate in expression ??
+
+    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
+            .push($ -> new PrintStatementNode($.$0()));
 
     public rule root = seq(ws, choice(statement, expression));
 

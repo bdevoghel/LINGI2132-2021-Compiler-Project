@@ -4,6 +4,12 @@ import AST.*;
 import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
 
+import java.awt.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.ListIterator;
+
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
 
@@ -187,6 +193,13 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testExpression() {
         this.rule = parser.expression;
+        success("1");
+        success("a");
+        success("true");
+        success("\"x\"");
+
+//        success("a[i]"); // TODO make it work (see TODO at testArrayMapAccess)
+
         success("1 == 2");
         success("1== 2");
         success("1 ==2");
@@ -266,5 +279,40 @@ public class KneghelParserTests extends TestFixture {
         successExpect("while 1 > 2 { a = b }", new WhileStatementNode(new BinaryExpressionNode(new IntegerNode(1), GREATER_THAN, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IdentifierNode("b"))));
         successExpect("while true { a = b + 1 }", new WhileStatementNode(new BooleanNode(true), new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new IdentifierNode("b"), ADD, new IntegerNode(1)))));
         // TODO complete with more tests
+    }
+
+    @Test
+    public void testFunctions() {
+        this.rule = parser.functionStatement;
+        successExpect("fun foo(a, b) { c = a + b \n d = c * c \n return d }",
+                new FunctionStatementNode(
+                        new IdentifierNode("foo"),
+                        new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b"))),
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("c"), new BinaryExpressionNode(new IdentifierNode("a"), ADD, new IdentifierNode("b"))), new AssignmentNode(new IdentifierNode("d"), new BinaryExpressionNode(new IdentifierNode("c"), MULTIPLY, new IdentifierNode("c")))),
+                        new IdentifierNode("d")));
+        // TODO complete with more tests
+    }
+
+    @Test
+    public void testArrayMapAccess() {
+        this.rule = parser.arrayMapAccessExpression;
+        successExpect("a[i]", new ArrayMapAccessNode(new IdentifierNode("a"), new IdentifierNode("i")));
+        // TODO complete with more tests and tests integrating ArrayMapAccess in other expressions
+    }
+
+    @Test
+    public void testFunctionCalls() {
+        this.rule = parser.functionCallExpression;
+        successExpect("foo(a, b)",
+                new FunctionCallNode(
+                        new IdentifierNode("foo"),
+                        new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b")))));
+        // TODO complete with more tests and tests integrating FunctionCall in other expressions
+    }
+
+    @Test
+    public void testPrintCalls() {
+        this.rule = parser.printStatement;
+        // TODO
     }
 }
