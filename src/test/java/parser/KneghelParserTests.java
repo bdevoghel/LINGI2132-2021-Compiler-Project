@@ -326,7 +326,10 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testProgramParameters() {
         this.rule = parser.programParametersDefinition;
-        //TODO
+        successExpect("args[0] = \"a\"",
+                new ProgramParametersDefinitionNode(
+                        "args",
+                        new ProgramParametersNode("a")));
     }
 
     @Test
