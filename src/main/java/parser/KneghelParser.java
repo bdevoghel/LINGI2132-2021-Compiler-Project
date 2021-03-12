@@ -73,12 +73,25 @@ public final class KneghelParser extends Grammar {
     public rule _false = reserved("false")  .as_val(false);
     public rule _null = reserved("null")    .as_val(null);
 
+    /*public rule _arg1 = reserved("$1");
+    public rule _arg2 = reserved("$2");
+    public rule _arg3 = reserved("$3");
+    public rule _arg4 = reserved("$4");
+    public rule _arg5 = reserved("$5");
+    public rule _arg6 = reserved("$6");
+    public rule _arg7 = reserved("$7");
+    public rule _arg8 = reserved("$8");
+    public rule _arg9 = reserved("$9");*/
+    public rule _args = reserved("args")    .as_val("args");
+
     public rule _if = reserved("if");
     public rule _else = reserved("else");
     public rule _while = reserved("while");
     public rule _fun = reserved("fun");
     public rule _return = reserved("return");
     public rule _print = reserved("print");
+    public rule _println = reserved("println");
+    public rule _int = reserved("int");
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
@@ -200,9 +213,18 @@ public final class KneghelParser extends Grammar {
             .push($ -> new FunctionCallNode($.$0(), $.$1())); // TODO where to integrate in expression ??
 
     public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
-            .push($ -> new PrintStatementNode($.$0()));
+            .push($ -> new PrintStatementNode($.$0())); //TODO how do we identify the different prints
+
+    public rule programParameters = seq(string.at_least(0))
+            .push($ -> new ProgramParametersNode($.$0()));
+
+    public rule programParametersDefinition = programParameters
+            .push($ -> new ProgramParametersDefinitionNode("args", $.$0()));
 
     public rule root = seq(ws, choice(statement, expression));
+
+    public rule parsingString = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
+            .push($ -> new ParsingNode($.$0()));
 
     @Override public rule root() {
         return root;

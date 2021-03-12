@@ -19,4 +19,8 @@ public class StringNode implements ExpressionNode {
     public String toString() {
         return "StringNode:" + value;
     }
+
+    public String getValue(){
+        return this.value;
+    }
 }

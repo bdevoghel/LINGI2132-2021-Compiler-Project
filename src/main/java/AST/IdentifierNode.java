@@ -19,4 +19,8 @@ public class IdentifierNode implements ExpressionNode {
     public String toString() {
         return "IdentifierNode:" + value;
     }
+
+    public String getValue(){
+        return this.value;
+    }
 }
