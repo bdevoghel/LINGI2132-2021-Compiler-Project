@@ -313,6 +313,30 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testPrintCalls() {
         this.rule = parser.printStatement;
+        successExpect("print(a)",
+                new PrintStatementNode(
+                        new IdentifierNode("a")));
+        successExpect("println(a)",
+                new PrintStatementNode(
+                        new IdentifierNode("a")));
         // TODO
+
     }
+
+    @Test
+    public void testProgramParameters() {
+        this.rule = parser.programParametersDefinition;
+        //TODO
+    }
+
+    @Test
+    public void testParsingString(){
+        this.rule = parser.parsingString;
+        successExpect("int(\"4\")",
+                new ParsingNode(
+                        new StringNode("4")));
+        //TODO: better testing
+    }
+
+
 }

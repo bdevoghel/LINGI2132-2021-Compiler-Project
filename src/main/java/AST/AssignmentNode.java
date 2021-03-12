@@ -1,10 +1,10 @@
 package AST;
 
 public class AssignmentNode implements StatementNode {
-    private IdentifierNode variable;
+    private ExpressionNode variable;
     private ExpressionNode value;
 
-    public AssignmentNode(IdentifierNode variable, ExpressionNode value) {
+    public AssignmentNode(ExpressionNode variable, ExpressionNode value) {
         this.variable = variable;
         this.value = value;
     }
