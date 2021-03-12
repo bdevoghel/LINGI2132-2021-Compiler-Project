@@ -12,6 +12,8 @@ import norswap.autumn.ParseResult;
 import norswap.autumn.actions.StackPush;
 import norswap.autumn.positions.LineMapString;
 
+import java.awt.*;
+
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
 
@@ -82,7 +84,7 @@ public final class KneghelParser extends Grammar {
     public rule _arg7 = reserved("$7");
     public rule _arg8 = reserved("$8");
     public rule _arg9 = reserved("$9");*/
-    public rule _args = reserved("args")    .as_val("args");
+    public rule _args = reserved("args")    .as_val(word("args"));
 
     public rule _if = reserved("if");
     public rule _else = reserved("else");
@@ -90,8 +92,8 @@ public final class KneghelParser extends Grammar {
     public rule _fun = reserved("fun");
     public rule _class = reserved("class");
     public rule _return = reserved("return");
-    public rule _print = reserved("print");
-    public rule _int = reserved("int");
+    public rule _print = reserved("print")  .as_val(word("print"));
+    public rule _int = reserved("int")      .as_val(word("int"));
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
@@ -180,7 +182,11 @@ public final class KneghelParser extends Grammar {
 
     public rule expression = lazy(() -> choice(arrayMapAccessExpression, this.functionCallExpression, logicExpression));
 
-    public rule returnExpression = seq(_return, expression);
+    public rule returnStatement = seq(_return, expression)
+            .push($ -> {
+                System.out.println($.$list());
+                return $.$0();
+            });
 
     // Simple statements
     public rule variableDefinition = seq(identifier, EQ, expression)
@@ -195,7 +201,10 @@ public final class KneghelParser extends Grammar {
             this.whileStatement,
             this.functionStatement));
 
-    public rule ifStatement = seq(_if, logicExpression, statement, seq(_else, statement).or_push_null())
+    public rule statementBody = seq(statement.at_least(0), returnStatement.opt())
+            .push($ -> $.$list());
+
+    public rule ifStatement = seq(_if, logicExpression, OPENBRACE, statementBody, CLOSEBRACE, seq(_else, statementBody).or_push_null())
             .push($ -> new IfStatementNode($.$0(), $.$1(), $.$2()));
 
     public rule whileStatement = seq(_while, logicExpression, statement)
@@ -209,8 +218,6 @@ public final class KneghelParser extends Grammar {
             .push($ -> new ParsingNode($.$0()));
 
     // Function
-    public rule functionBody = seq(statement.at_least(0))
-            .push($ -> $.$list());
 
     public rule functionArguments = seq(OPENPARENT, identifier.sep(0, COMMA), CLOSEPARENT)
             .push($ -> new FunctionArgumentsNode($.$list()));
@@ -218,8 +225,8 @@ public final class KneghelParser extends Grammar {
     public rule functionHeader = seq(_fun, identifier, functionArguments)
             .push($ -> new FunctionStatementNode($.$0(), $.$1()));
 
-    public rule functionStatement = seq(functionHeader, OPENBRACE, functionBody, returnExpression, CLOSEBRACE)
-            .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()).setReturnExpression($.$2()));
+    public rule functionStatement = seq(functionHeader, OPENBRACE, statementBody, CLOSEBRACE)
+            .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()));
 
     public rule functionCallExpression = seq(identifier, functionArguments)
             .push($ -> new FunctionCallNode($.$0(), $.$1()));
