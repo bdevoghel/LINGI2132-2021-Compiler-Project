@@ -88,9 +88,9 @@ public final class KneghelParser extends Grammar {
     public rule _else = reserved("else");
     public rule _while = reserved("while");
     public rule _fun = reserved("fun");
+    public rule _class = reserved("class");
     public rule _return = reserved("return");
     public rule _print = reserved("print");
-    public rule _println = reserved("println");
     public rule _int = reserved("int");
 
     // Variable name
@@ -115,8 +115,8 @@ public final class KneghelParser extends Grammar {
     public rule bool = choice(_true, _false)
             .push($ -> new BooleanNode(Boolean.parseBoolean($.str())));
 
-    public rule notStringEnd = seq(QUOTE.not(), any);
-    public rule string = seq("\"", notStringEnd.at_least(0), "\"") // TODO to modify (see norswap.java)
+    public rule notStringEnd = seq(QUOTE.not(), any); // TODO add escape literals
+    public rule string = seq("\"", notStringEnd.at_least(0), "\"")
             .push($ -> {
                 String s = $.str();
                 return new StringNode(s.substring(1, s.length()-1)); // slice String without quotes
@@ -125,8 +125,9 @@ public final class KneghelParser extends Grammar {
     public rule value = choice(number, bool, identifier, string, _null).word();
 
 
-    // EXPRESSIONS
+    // EXPRESSIONS & STATEMENTS
 
+    // Simple expressions
     StackPush pushBinaryExpression = $ -> new BinaryExpressionNode($.$0(), $.$1(), $.$2());
     StackPush pushUnaryExpression = $ -> new UnaryExpressionNode($.$0(), $.$1());
 
@@ -179,6 +180,9 @@ public final class KneghelParser extends Grammar {
 
     public rule expression = lazy(() -> choice(arrayMapAccessExpression, this.functionCallExpression, logicExpression));
 
+    public rule returnExpression = seq(_return, expression);
+
+    // Simple statements
     public rule variableDefinition = seq(identifier, EQ, expression)
             .push($ -> new AssignmentNode($.$0(), $.$1()));
 
@@ -197,6 +201,14 @@ public final class KneghelParser extends Grammar {
     public rule whileStatement = seq(_while, logicExpression, statement)
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
+    // Print & Parse
+    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
+            .push($ -> new PrintStatementNode($.$0()));
+
+    public rule parseStringToInt = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
+            .push($ -> new ParsingNode($.$0()));
+
+    // Function
     public rule functionBody = seq(statement.at_least(0))
             .push($ -> $.$list());
 
@@ -206,31 +218,21 @@ public final class KneghelParser extends Grammar {
     public rule functionHeader = seq(_fun, identifier, functionArguments)
             .push($ -> new FunctionStatementNode($.$0(), $.$1()));
 
-    public rule functionStatement = seq(functionHeader, OPENBRACE, functionBody, _return, expression, CLOSEBRACE)
+    public rule functionStatement = seq(functionHeader, OPENBRACE, functionBody, returnExpression, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()).setReturnExpression($.$2()));
 
+    public rule functionCallExpression = seq(identifier, functionArguments)
+            .push($ -> new FunctionCallNode($.$0(), $.$1()));
+
+    // Class
     public rule classBody = seq(OPENBRACE, functionStatement.at_least(0), CLOSEBRACE)
             .push($ -> new ClassStatementNode($.$list()));
 
     public rule classStatement = seq(_class, identifier, classBody)
             .push($ -> ((ClassStatementNode) $.$1()).setIdentifier($.$0()));
 
-    public rule functionCallExpression = seq(identifier, functionArguments)
-            .push($ -> new FunctionCallNode($.$0(), $.$1()));
-
-    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
-            .push($ -> new PrintStatementNode($.$0())); //TODO how do we identify the different prints
-
-    public rule programParameters = seq(string.at_least(0))
-            .push($ -> new ProgramParametersNode($.$0()));
-
-    public rule programParametersDefinition = programParameters
-            .push($ -> new ProgramParametersDefinitionNode("args", $.$0()));
-
+    // ROOT
     public rule root = seq(ws, classStatement);
-
-    public rule parsingString = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
-            .push($ -> new ParsingNode($.$0()));
 
     @Override public rule root() {
         return root;
