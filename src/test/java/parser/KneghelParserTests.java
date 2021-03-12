@@ -268,29 +268,37 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testConditions() {
         this.rule = parser.ifStatement;
-        successExpect("if 1 == 2 { a=3 }", new IfStatementNode(new BinaryExpressionNode(new IntegerNode(1), EQUAL, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3))));
-        successExpect("if true { a=2 } else { a=3 }", new IfStatementNode(new BooleanNode(true), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3))));
+        successExpect("if 1 == 2 { a=3 }",
+                new IfStatementNode(
+                        new BinaryExpressionNode(new IntegerNode(1), EQUAL, new IntegerNode(2)),
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3)))));
+        successExpect("if true { a=2 } else { a=3 }",
+                new IfStatementNode(
+                        new BooleanNode(true),
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2))),
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3)))));
         successExpect("if a == 1 { a=2 } else if a { a=3 }",
                 new IfStatementNode(
                         new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IntegerNode(1)),
-                        new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)),
-                        new IfStatementNode(
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2))),
+                        Arrays.asList(new IfStatementNode(
                                 new IdentifierNode("a"),
-                                new AssignmentNode(
-                                    new IdentifierNode("a"),
-                                    new IntegerNode(3)))));
+                                Arrays.asList(
+                                        new AssignmentNode(
+                                            new IdentifierNode("a"),
+                                            new IntegerNode(3)))))));
         success("if a == 1 { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
         successExpect("if a == 1 { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" } else { a = null }",
                 new IfStatementNode(
                         new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IntegerNode(1)),
-                        new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2)),
-                        new IfStatementNode(
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(2))),
+                        Arrays.asList(new IfStatementNode(
                                 new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new BooleanNode(true)),
-                                new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3)),
-                                new IfStatementNode(
+                                Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3))),
+                                Arrays.asList(new IfStatementNode(
                                         new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new StringNode("hello")),
-                                        new AssignmentNode(new IdentifierNode("a"), new StringNode("world")),
-                                        new AssignmentNode(new IdentifierNode("a"), null)))));
+                                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new StringNode("world"))),
+                                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), null))))))));
         success("if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
         failure("if a == 1 a=2 b=2 else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
         failure("if { a == 1 } { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
@@ -308,18 +316,21 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testFunctions() {
         this.rule = parser.functionStatement;
+        successExpect("fun bar() { a = 1 return a }",
+                new FunctionStatementNode(
+                        new IdentifierNode("bar"),
+                        new FunctionArgumentsNode(Arrays.asList()),
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(1)), new IdentifierNode("a"))));
         successExpect("fun bar() { return 1 }",
                 new FunctionStatementNode(
                         new IdentifierNode("bar"),
                         new FunctionArgumentsNode(Arrays.asList()),
-                        Arrays.asList(),
-                        new IntegerNode(1)));
+                        Arrays.asList(new IntegerNode(1))));
         successExpect("fun foo(a, b) { c = a + b \n d = c * c \n return d }",
                 new FunctionStatementNode(
                         new IdentifierNode("foo"),
                         new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b"))),
-                        Arrays.asList(new AssignmentNode(new IdentifierNode("c"), new BinaryExpressionNode(new IdentifierNode("a"), ADD, new IdentifierNode("b"))), new AssignmentNode(new IdentifierNode("d"), new BinaryExpressionNode(new IdentifierNode("c"), MULTIPLY, new IdentifierNode("c")))),
-                        new IdentifierNode("d")));
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("c"), new BinaryExpressionNode(new IdentifierNode("a"), ADD, new IdentifierNode("b"))), new AssignmentNode(new IdentifierNode("d"), new BinaryExpressionNode(new IdentifierNode("c"), MULTIPLY, new IdentifierNode("c"))),new IdentifierNode("d"))));
     }
 
     @Test
@@ -359,8 +370,7 @@ public class KneghelParserTests extends TestFixture {
                                 new FunctionStatementNode(
                                         new IdentifierNode("bar"),
                                         new FunctionArgumentsNode(Arrays.asList()),
-                                        Arrays.asList(),
-                                        new IntegerNode(1)))));
+                                        Arrays.asList(new IntegerNode(1))))));
     }
 
     @Test
@@ -376,8 +386,7 @@ public class KneghelParserTests extends TestFixture {
                                 new FunctionStatementNode(
                                         new IdentifierNode("bar"),
                                         new FunctionArgumentsNode(Arrays.asList()),
-                                        Arrays.asList(),
-                                        new IntegerNode(1)))));
+                                        Arrays.asList(new IntegerNode(1))))));
     }
 
     @Test
@@ -387,3 +396,4 @@ public class KneghelParserTests extends TestFixture {
         //TODO: better testing
     }
 }
+
