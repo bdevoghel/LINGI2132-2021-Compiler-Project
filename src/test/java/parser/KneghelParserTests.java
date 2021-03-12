@@ -5,10 +5,7 @@ import org.testng.annotations.Test;
 import norswap.autumn.TestFixture;
 
 import java.awt.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.ListIterator;
+import java.util.*;
 
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
@@ -209,7 +206,7 @@ public class KneghelParserTests extends TestFixture {
         successExpect("a = null", new AssignmentNode(new IdentifierNode("a"), null));
         successExpect("a = 1 + 2 * 3", new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new IntegerNode(1), ADD, new BinaryExpressionNode(new IntegerNode(2), MULTIPLY, new IntegerNode(3)))));
         successExpect("a = false || true && true", new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new BooleanNode(false), OR, new BinaryExpressionNode(new BooleanNode(true), AND, new BooleanNode(true)))));
-        // TODO complete
+//        successExpect("a = \"a\"+\"a\" - \"a\"", new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new StringNode("a"), ADD, new StringNode("a"))));
     }
 
     @Test
@@ -302,7 +299,6 @@ public class KneghelParserTests extends TestFixture {
         success("if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
         failure("if a == 1 a=2 b=2 else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
         failure("if { a == 1 } { a=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }");
-        // TODO complete with failures
     }
 
     @Test
@@ -310,7 +306,21 @@ public class KneghelParserTests extends TestFixture {
         this.rule = parser.whileStatement;
         successExpect("while 1 > 2 { a = b }", new WhileStatementNode(new BinaryExpressionNode(new IntegerNode(1), GREATER_THAN, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IdentifierNode("b"))));
         successExpect("while true { a = b + 1 }", new WhileStatementNode(new BooleanNode(true), new AssignmentNode(new IdentifierNode("a"), new BinaryExpressionNode(new IdentifierNode("b"), ADD, new IntegerNode(1)))));
-        // TODO complete with more tests
+        successExpect("while 1!=2 {a = 1}", new WhileStatementNode(new BinaryExpressionNode(new IntegerNode(1), NOT_EQUAL, new IntegerNode(2)), new AssignmentNode(new IdentifierNode("a"), new IntegerNode(1))));
+        successExpect("while a == b { if c == 1 {b = 2}}",
+                new WhileStatementNode(
+                        new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IdentifierNode("b")),
+                        new IfStatementNode(
+                                new BinaryExpressionNode(new IdentifierNode("c"), EQUAL, new IntegerNode(1)),
+                                new AssignmentNode(new IdentifierNode("b"), new IntegerNode(2)))));
+        successExpect("while true { a = foo(a, b)}",
+                new WhileStatementNode(
+                        new BooleanNode(true),
+                        new AssignmentNode(
+                                new IdentifierNode("a"),
+                                new FunctionCallNode(
+                                        new IdentifierNode("foo"),
+                                        new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b")))))));
     }
 
     @Test
@@ -337,7 +347,13 @@ public class KneghelParserTests extends TestFixture {
     public void testArrayMapAccess() {
         this.rule = parser.arrayMapAccessExpression;
         successExpect("a[i]", new ArrayMapAccessNode(new IdentifierNode("a"), new IdentifierNode("i")));
-        // TODO complete with more tests and tests integrating ArrayMapAccess in other expressions
+        // TODO tests integrating ArrayMapAccess in other expressions
+        successExpect("a[0]", new ArrayMapAccessNode(
+                new IdentifierNode("a"), new IntegerNode(0)));
+        successExpect("a[1+2]", new ArrayMapAccessNode(
+                new IdentifierNode("a"),
+                new BinaryExpressionNode(
+                        new IntegerNode(1), ADD, new IntegerNode(2))));
     }
 
     @Test
@@ -347,7 +363,14 @@ public class KneghelParserTests extends TestFixture {
                 new FunctionCallNode(
                         new IdentifierNode("foo"),
                         new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b")))));
-        // TODO complete with more tests and tests integrating FunctionCall in other expressions
+        successExpect("foo(b)",
+                new FunctionCallNode(
+                        new IdentifierNode("foo"),
+                        new FunctionArgumentsNode(Arrays.asList( new IdentifierNode("b")))));
+        successExpect("foo()",
+                new FunctionCallNode(
+                        new IdentifierNode("foo"),
+                        new FunctionArgumentsNode(Collections.emptyList())));
     }
 
     @Test
@@ -356,7 +379,15 @@ public class KneghelParserTests extends TestFixture {
         successExpect("print(a)",
                 new PrintStatementNode(
                         new IdentifierNode("a")));
-        // TODO
+        successExpect("print(\"a\")",
+                new PrintStatementNode(
+                        new StringNode("a")));
+        successExpect("print(identifier)",
+                new PrintStatementNode(
+                        new IdentifierNode("identifier")));
+        successExpect("print(\"identifier\")",
+                new PrintStatementNode(
+                        new StringNode("identifier")));
     }
 
     @Test
@@ -393,7 +424,8 @@ public class KneghelParserTests extends TestFixture {
     public void testParsingString(){
         this.rule = parser.parseStringToInt;
         successExpect("int(\"4\")", new ParsingNode(new StringNode("4")));
-        //TODO: better testing
+        successExpect("int(\"57389\")",
+                new ParsingNode(new StringNode("57389")));
     }
 }
 
