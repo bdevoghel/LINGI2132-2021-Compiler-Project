@@ -75,15 +75,6 @@ public final class KneghelParser extends Grammar {
     public rule _false = reserved("false")  .as_val(false);
     public rule _null = reserved("null")    .as_val(null);
 
-    /*public rule _arg1 = reserved("$1");
-    public rule _arg2 = reserved("$2");
-    public rule _arg3 = reserved("$3");
-    public rule _arg4 = reserved("$4");
-    public rule _arg5 = reserved("$5");
-    public rule _arg6 = reserved("$6");
-    public rule _arg7 = reserved("$7");
-    public rule _arg8 = reserved("$8");
-    public rule _arg9 = reserved("$9");*/
     public rule _args = reserved("args")    .as_val(word("args"));
 
     public rule _if = reserved("if");
@@ -92,8 +83,8 @@ public final class KneghelParser extends Grammar {
     public rule _fun = reserved("fun");
     public rule _class = reserved("class");
     public rule _return = reserved("return");
-    public rule _print = reserved("print")  .as_val(word("print"));
-    public rule _int = reserved("int")      .as_val(word("int"));
+    public rule _print = reserved("print");//  .as_val(word("print"));
+    public rule _int = reserved("int");//      .as_val(word("int"));
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))

@@ -312,7 +312,7 @@ public class KneghelParserTests extends TestFixture {
                         new BinaryExpressionNode(new IdentifierNode("a"), EQUAL, new IdentifierNode("b")),
                         new IfStatementNode(
                                 new BinaryExpressionNode(new IdentifierNode("c"), EQUAL, new IntegerNode(1)),
-                                new AssignmentNode(new IdentifierNode("b"), new IntegerNode(2)))));
+                                Arrays.asList(new AssignmentNode(new IdentifierNode("b"), new IntegerNode(2))))));
         successExpect("while true { a = foo(a, b)}",
                 new WhileStatementNode(
                         new BooleanNode(true),
