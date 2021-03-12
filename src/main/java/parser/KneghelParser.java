@@ -174,10 +174,10 @@ public final class KneghelParser extends Grammar {
 
     public rule logicExpression = choice(logicOrExpression, bool);
 
-    public rule arrayMapAccessExpression = lazy(() -> seq(this.expression, OPENBRACKET, this.expression, CLOSEBRACKET))
-            .push($ -> new ArrayMapAccessNode($.$0(), $.$1())); // TODO where to integrate in expression ??
+    public rule arrayMapAccessExpression = lazy(() -> seq(identifier, OPENBRACKET, this.expression, CLOSEBRACKET))
+            .push($ -> new ArrayMapAccessNode($.$0(), $.$1()));
 
-    public rule expression = choice(logicExpression); // TODO simplify ??
+    public rule expression = lazy(() -> choice(arrayMapAccessExpression, this.functionCallExpression, logicExpression));
 
     public rule variableDefinition = seq(identifier, EQ, expression)
             .push($ -> new AssignmentNode($.$0(), $.$1()));
@@ -197,20 +197,26 @@ public final class KneghelParser extends Grammar {
     public rule whileStatement = seq(_while, logicExpression, statement)
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
-    public rule functionBody = seq(OPENBRACE, statement.at_least(0))
+    public rule functionBody = seq(statement.at_least(0))
             .push($ -> $.$list());
 
-    public rule functionArguments = seq(OPENPARENT, identifier.opt(), seq(COMMA, identifier).at_least(0), CLOSEPARENT) // TODO seq COMMA => separatedBy .... (autunm)
+    public rule functionArguments = seq(OPENPARENT, identifier.sep(0, COMMA), CLOSEPARENT)
             .push($ -> new FunctionArgumentsNode($.$list()));
 
     public rule functionHeader = seq(_fun, identifier, functionArguments)
             .push($ -> new FunctionStatementNode($.$0(), $.$1()));
 
-    public rule functionStatement = seq(functionHeader, functionBody, _return, expression, CLOSEBRACE)
+    public rule functionStatement = seq(functionHeader, OPENBRACE, functionBody, _return, expression, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()).setReturnExpression($.$2()));
 
+    public rule classBody = seq(OPENBRACE, functionStatement.at_least(0), CLOSEBRACE)
+            .push($ -> new ClassStatementNode($.$list()));
+
+    public rule classStatement = seq(_class, identifier, classBody)
+            .push($ -> ((ClassStatementNode) $.$1()).setIdentifier($.$0()));
+
     public rule functionCallExpression = seq(identifier, functionArguments)
-            .push($ -> new FunctionCallNode($.$0(), $.$1())); // TODO where to integrate in expression ??
+            .push($ -> new FunctionCallNode($.$0(), $.$1()));
 
     public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
             .push($ -> new PrintStatementNode($.$0())); //TODO how do we identify the different prints
@@ -221,7 +227,7 @@ public final class KneghelParser extends Grammar {
     public rule programParametersDefinition = programParameters
             .push($ -> new ProgramParametersDefinitionNode("args", $.$0()));
 
-    public rule root = seq(ws, choice(statement, expression));
+    public rule root = seq(ws, classStatement);
 
     public rule parsingString = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
             .push($ -> new ParsingNode($.$0()));

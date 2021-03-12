@@ -1,10 +1,10 @@
 package AST;
 
 public class ArrayMapAccessNode implements ExpressionNode {
-    private ExpressionNode arrayMap;
+    private IdentifierNode arrayMap;
     private ExpressionNode index;
 
-    public ArrayMapAccessNode(ExpressionNode arrayMap, ExpressionNode index) {
+    public ArrayMapAccessNode(IdentifierNode arrayMap, ExpressionNode index) {
         this.arrayMap = arrayMap;
         this.index = index;
     }

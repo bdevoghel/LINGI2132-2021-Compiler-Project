@@ -220,7 +220,7 @@ public class KneghelParserTests extends TestFixture {
         success("true");
         success("\"x\"");
 
-//        success("a[i]"); // TODO make it work (see TODO at testArrayMapAccess)
+        success("a[i]");
 
         success("1 == 2");
         success("1== 2");
@@ -243,6 +243,8 @@ public class KneghelParserTests extends TestFixture {
 
         success("a || true && b");
 
+        successExpect("a[i]", new ArrayMapAccessNode(new IdentifierNode("a"), new IdentifierNode("i")));
+        successExpect("a[1 + 2]", new ArrayMapAccessNode(new IdentifierNode("a"), new BinaryExpressionNode(new IntegerNode(1), ADD, new IntegerNode(2))));
         successExpect("1 + 2 <= 3 * 4", new BinaryExpressionNode(new BinaryExpressionNode(new IntegerNode(1), ADD, new IntegerNode(2)), LESS_OR_EQUAL, new BinaryExpressionNode(new IntegerNode(3), MULTIPLY, new IntegerNode(4))));
         successExpect("false || 1 + 2 * 3 <= 4 && true",
                 new BinaryExpressionNode(
@@ -306,13 +308,18 @@ public class KneghelParserTests extends TestFixture {
     @Test
     public void testFunctions() {
         this.rule = parser.functionStatement;
+        successExpect("fun bar() { return 1 }",
+                new FunctionStatementNode(
+                        new IdentifierNode("bar"),
+                        new FunctionArgumentsNode(Arrays.asList()),
+                        Arrays.asList(),
+                        new IntegerNode(1)));
         successExpect("fun foo(a, b) { c = a + b \n d = c * c \n return d }",
                 new FunctionStatementNode(
                         new IdentifierNode("foo"),
                         new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"), new IdentifierNode("b"))),
                         Arrays.asList(new AssignmentNode(new IdentifierNode("c"), new BinaryExpressionNode(new IdentifierNode("a"), ADD, new IdentifierNode("b"))), new AssignmentNode(new IdentifierNode("d"), new BinaryExpressionNode(new IdentifierNode("c"), MULTIPLY, new IdentifierNode("c")))),
                         new IdentifierNode("d")));
-        // TODO complete with more tests
     }
 
     @Test
@@ -338,20 +345,39 @@ public class KneghelParserTests extends TestFixture {
         successExpect("print(a)",
                 new PrintStatementNode(
                         new IdentifierNode("a")));
-        successExpect("println(a)",
-                new PrintStatementNode(
-                        new IdentifierNode("a")));
         // TODO
-
     }
 
     @Test
-    public void testProgramParameters() {
-        this.rule = parser.programParametersDefinition;
-        successExpect("args[0] = \"a\"",
-                new ProgramParametersDefinitionNode(
-                        "args",
-                        new ProgramParametersNode("a")));
+    public void testClasses() {
+        this.rule = parser.classStatement;
+        successExpect("class Foo {}", new ClassStatementNode(new IdentifierNode("Foo"), Arrays.asList()));
+        successExpect("class Foo { fun bar() { return 1 } }",
+                new ClassStatementNode(
+                        new IdentifierNode("Foo"),
+                        Arrays.asList(
+                                new FunctionStatementNode(
+                                        new IdentifierNode("bar"),
+                                        new FunctionArgumentsNode(Arrays.asList()),
+                                        Arrays.asList(),
+                                        new IntegerNode(1)))));
+    }
+
+    @Test
+    public void testClassAsRoot() {
+        this.rule = parser.root;
+        failure("a = 1 + 2");
+        failure("fun bar() { return 1 }");
+        successExpect("class Foo {}", new ClassStatementNode(new IdentifierNode("Foo"), Arrays.asList()));
+        successExpect("class Foo { fun bar() { return 1 } }",
+                new ClassStatementNode(
+                        new IdentifierNode("Foo"),
+                        Arrays.asList(
+                                new FunctionStatementNode(
+                                        new IdentifierNode("bar"),
+                                        new FunctionArgumentsNode(Arrays.asList()),
+                                        Arrays.asList(),
+                                        new IntegerNode(1)))));
     }
 
     @Test
