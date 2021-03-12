@@ -1,0 +1,14 @@
+class Uniq {
+
+    fun main(args) {
+        m = {}
+        i = 0
+        while i < len(args) {
+            if m[args[i]] == null {
+                print(args[i])
+                m[args[i]] = true
+            }
+            i = i + 1
+        }
+    }
+}

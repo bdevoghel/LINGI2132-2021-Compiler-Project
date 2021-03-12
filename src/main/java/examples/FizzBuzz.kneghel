@@ -1,4 +1,4 @@
-// this function is different from the Java one, because we want to testclass FizzBuzz {
+class FizzBuzz {
     fun main(args) {
         i = 1
         while i<=100{
