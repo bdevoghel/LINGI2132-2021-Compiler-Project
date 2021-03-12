@@ -86,12 +86,18 @@ public final class KneghelParser extends Grammar {
 
 
     // Literal
-//    public rule neg = choice(seq(MINUS, choice(integer, identifier).ahead()), seq(NOT, choice(bool, identifier).ahead()))
-//            .push($ -> new NegationNode($.str()));
-//    public rule minus =
 
-    public rule integer = seq(opt(MINUS), choice('0', digit.at_least(1)))
+    public rule integer = seq(MINUS.opt(), choice('0', digit.at_least(1)))
             .push($ -> new IntegerNode(Integer.parseInt($.str().replaceAll("\\s+",""))));
+
+    public rule fractional = seq('.', digit.at_least(1));
+
+    public rule exponent = seq(set("eE"), set("+-").opt(), choice('0', digit.at_least(1)));
+
+    public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional.opt(), exponent.opt())
+            .push($ -> new DoubleNode(Double.parseDouble($.str().replaceAll("\\s+",""))));
+
+    public rule number = choice(integer, doub);
 
     public rule bool = choice(_true, _false)
             .push($ -> new BooleanNode(Boolean.parseBoolean($.str())));
@@ -103,7 +109,7 @@ public final class KneghelParser extends Grammar {
                 return new StringNode(s.substring(1, s.length()-1)); // slice String without quotes
             });
 
-    public rule value = choice(integer, bool, identifier, string, _null).word();
+    public rule value = choice(number, bool, identifier, string, _null).word();
 
 
     // EXPRESSIONS

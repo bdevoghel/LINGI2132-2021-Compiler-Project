@@ -32,6 +32,28 @@ public class KneghelParserTests extends TestFixture {
     }
 
     @Test
+    public void testDouble() {
+        this.rule = parser.doub;
+        success("1.0");
+        success("1234.1234");
+        failure("a");
+        successExpect("1.0", new DoubleNode(1.0));
+        successExpect("1.23e-10", new DoubleNode(1.23e-10));
+        successExpect("1.23e+10", new DoubleNode(1.23e+10));
+        successExpect("1.23E-10", new DoubleNode(1.23e-10));
+        successExpect("1.0", new DoubleNode(1.0));
+        success("-1.1234");
+        success("- 1.1234");
+        failure("- 1. 1234");
+        failure("- 1 .1234");
+        failure("- 1.23 e10");
+        failure("- 1.23e 10");
+        failure("-a");
+        successExpect("-1.1234", new DoubleNode(-1.1234));
+        successExpect("- 1.1234", new DoubleNode(-1.1234));
+    }
+
+    @Test
     public void testStrings() {
         this.rule = parser.string;
         successExpect("\"abc\"", new StringNode("abc"));
