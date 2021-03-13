@@ -12,7 +12,7 @@ import norswap.autumn.ParseResult;
 import norswap.autumn.actions.StackPush;
 import norswap.autumn.positions.LineMapString;
 
-import java.awt.*;
+import java.util.Arrays;
 
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
@@ -75,7 +75,6 @@ public final class KneghelParser extends Grammar {
     public rule _false = reserved("false")  .as_val(false);
     public rule _null = reserved("null")    .as_val(null);
 
-    public rule _args = reserved("args")    .as_val(word("args"));
 
     public rule _if = reserved("if");
     public rule _else = reserved("else");
@@ -83,8 +82,10 @@ public final class KneghelParser extends Grammar {
     public rule _fun = reserved("fun");
     public rule _class = reserved("class");
     public rule _return = reserved("return");
-    public rule _print = reserved("print");//  .as_val(word("print"));
-    public rule _int = reserved("int");//      .as_val(word("int"));
+    public rule _main = reserved("main")    .as_val("main");
+//    public rule _args = reserved("args");//    .as_val("args");
+//    public rule _print = reserved("print");//  .as_val(word("print"));
+//    public rule _int = reserved("int");//      .as_val(word("int"));
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
@@ -166,18 +167,15 @@ public final class KneghelParser extends Grammar {
             .operand(logicAndExpression)
             .infix(BARBAR.as_val(OR), pushBinaryExpression);
 
-    public rule logicExpression = choice(logicOrExpression, bool);
+    public rule logicExpression = lazy(() -> choice(this.functionCallExpression, logicOrExpression, bool));
 
     public rule arrayMapAccessExpression = lazy(() -> seq(identifier, OPENBRACKET, this.expression, CLOSEBRACKET))
             .push($ -> new ArrayMapAccessNode($.$0(), $.$1()));
 
-    public rule expression = lazy(() -> choice(arrayMapAccessExpression, this.functionCallExpression, logicExpression));
+    public rule expression = lazy(() -> choice(arrayMapAccessExpression, logicExpression));
 
     public rule returnStatement = seq(_return, expression)
-            .push($ -> {
-                System.out.println($.$list());
-                return $.$0();
-            });
+            .push($ -> $.$0());
 
     // Simple statements
     public rule variableDefinition = seq(identifier, EQ, expression)
@@ -188,6 +186,7 @@ public final class KneghelParser extends Grammar {
     public rule statement = lazy(() -> choice(
             block,
             variableDefinition,
+            this.functionCallExpression,
             this.ifStatement,
             this.whileStatement,
             this.functionStatement));
@@ -202,21 +201,27 @@ public final class KneghelParser extends Grammar {
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
     // Print & Parse
-    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
-            .push($ -> new PrintStatementNode($.$0()));
+//    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
+//            .push($ -> new PrintStatementNode($.$0()));
 
-    public rule parseStringToInt = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
-            .push($ -> new ParsingNode($.$0()));
+//    public rule parseStringToInt = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
+//            .push($ -> new ParsingNode($.$0()));
 
     // Function
 
-    public rule functionArguments = seq(OPENPARENT, identifier.sep(0, COMMA), CLOSEPARENT)
+    public rule functionArguments = seq(OPENPARENT, expression.sep(0, COMMA), CLOSEPARENT)
             .push($ -> new FunctionArgumentsNode($.$list()));
 
     public rule functionHeader = seq(_fun, identifier, functionArguments)
             .push($ -> new FunctionStatementNode($.$0(), $.$1()));
 
-    public rule functionStatement = seq(functionHeader, OPENBRACE, statementBody, CLOSEBRACE)
+    public rule functionMainHeader = seq(_fun, _main,
+            OPENPARENT, word("args").as_val(new IdentifierNode("args")), CLOSEPARENT)
+            .push($ -> new FunctionStatementNode(
+                    new IdentifierNode($.$0()),
+                    new FunctionArgumentsNode(Arrays.asList( (IdentifierNode)$.$1() ))));
+
+    public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()));
 
     public rule functionCallExpression = seq(identifier, functionArguments)

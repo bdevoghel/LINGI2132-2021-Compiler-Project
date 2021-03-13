@@ -218,6 +218,7 @@ public class KneghelParserTests extends TestFixture {
         success("\"x\"");
 
         success("a[i]");
+        success("a[1 + 2 > 3 && true]");
 
         success("1 == 2");
         success("1== 2");
@@ -347,7 +348,6 @@ public class KneghelParserTests extends TestFixture {
     public void testArrayMapAccess() {
         this.rule = parser.arrayMapAccessExpression;
         successExpect("a[i]", new ArrayMapAccessNode(new IdentifierNode("a"), new IdentifierNode("i")));
-        // TODO tests integrating ArrayMapAccess in other expressions
         successExpect("a[0]", new ArrayMapAccessNode(
                 new IdentifierNode("a"), new IntegerNode(0)));
         successExpect("a[1+2]", new ArrayMapAccessNode(
@@ -371,23 +371,6 @@ public class KneghelParserTests extends TestFixture {
                 new FunctionCallNode(
                         new IdentifierNode("foo"),
                         new FunctionArgumentsNode(Collections.emptyList())));
-    }
-
-    @Test
-    public void testPrintCalls() {
-        this.rule = parser.printStatement;
-        successExpect("print(a)",
-                new PrintStatementNode(
-                        new IdentifierNode("a")));
-        successExpect("print(\"a\")",
-                new PrintStatementNode(
-                        new StringNode("a")));
-        successExpect("print(identifier)",
-                new PrintStatementNode(
-                        new IdentifierNode("identifier")));
-        successExpect("print(\"identifier\")",
-                new PrintStatementNode(
-                        new StringNode("identifier")));
     }
 
     @Test
@@ -420,12 +403,29 @@ public class KneghelParserTests extends TestFixture {
                                         Arrays.asList(new IntegerNode(1))))));
     }
 
-    @Test
-    public void testParsingString(){
-        this.rule = parser.parseStringToInt;
-        successExpect("int(\"4\")", new ParsingNode(new StringNode("4")));
-        successExpect("int(\"57389\")",
-                new ParsingNode(new StringNode("57389")));
-    }
+//    @Test
+//    public void testPrintCalls() {
+//        this.rule = parser.printStatement;
+//        successExpect("print(a)",
+//                new PrintStatementNode(
+//                        new IdentifierNode("a")));
+//        successExpect("print(\"a\")",
+//                new PrintStatementNode(
+//                        new StringNode("a")));
+//        successExpect("print(identifier)",
+//                new PrintStatementNode(
+//                        new IdentifierNode("identifier")));
+//        successExpect("print(\"identifier\")",
+//                new PrintStatementNode(
+//                        new StringNode("identifier")));
+//    }
+
+//    @Test
+//    public void testParsingString(){
+//        this.rule = parser.parseStringToInt;
+//        successExpect("int(\"4\")", new ParsingNode(new StringNode("4")));
+//        successExpect("int(\"57389\")",
+//                new ParsingNode(new StringNode("57389")));
+//    }
 }
 
