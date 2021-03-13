@@ -1,12 +1,14 @@
 package AST;
 
+import java.util.List;
+
 public class WhileStatementNode implements StatementNode {
     private ExpressionNode condition;
-    private StatementNode statement;
+    private List statements;
 
-    public WhileStatementNode(ExpressionNode condition, StatementNode statement) {
+    public WhileStatementNode(ExpressionNode condition, List statements) {
         this.condition = condition;
-        this.statement = statement;
+        this.statements = statements;
     }
 
     @Override
@@ -16,11 +18,11 @@ public class WhileStatementNode implements StatementNode {
         WhileStatementNode other = (WhileStatementNode) obj;
         return
                 this.condition.equals(other.condition) &&
-                this.statement.equals(other.statement);
+                this.statements.equals(other.statements);
     }
 
     @Override
     public String toString() {
-        return "IfStatementNode:[" + condition + "{" + statement + "}"+"]";
+        return "WhileStatementNode:[" + condition + "{" + statements + "}"+"]";
     }
 }

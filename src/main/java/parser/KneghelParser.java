@@ -175,7 +175,7 @@ public final class KneghelParser extends Grammar {
     public rule expression = lazy(() -> choice(arrayMapAccessExpression, logicExpression));
 
     public rule returnStatement = seq(_return, expression)
-            .push($ -> $.$0());
+            .push($ -> new ReturnStatementNode($.$0()));
 
     // Simple statements
     public rule variableDefinition = seq(identifier, EQ, expression)
@@ -197,7 +197,7 @@ public final class KneghelParser extends Grammar {
     public rule ifStatement = seq(_if, logicExpression, OPENBRACE, statementBody, CLOSEBRACE, seq(_else, statementBody).or_push_null())
             .push($ -> new IfStatementNode($.$0(), $.$1(), $.$2()));
 
-    public rule whileStatement = seq(_while, logicExpression, statement)
+    public rule whileStatement = seq(_while, logicExpression, OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> new WhileStatementNode($.$0(), $.$1()));
 
     // Print & Parse

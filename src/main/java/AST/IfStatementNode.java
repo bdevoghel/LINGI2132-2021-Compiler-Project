@@ -4,17 +4,17 @@ import java.util.List;
 
 public class IfStatementNode implements StatementNode {
     private ExpressionNode condition;
-    private List<StatementNode> trueStatement;
-    private List<StatementNode> falseStatement;
+    private List trueStatements;
+    private List falseStatements;
 
-    public IfStatementNode(ExpressionNode condition, List<StatementNode> trueStatement) {
-        this(condition, trueStatement, null);
+    public IfStatementNode(ExpressionNode condition, List trueStatements) {
+        this(condition, trueStatements, null);
     }
 
-    public IfStatementNode(ExpressionNode condition, List<StatementNode> trueStatement, List<StatementNode> falseStatement) {
+    public IfStatementNode(ExpressionNode condition, List trueStatements, List falseStatements) {
         this.condition = condition;
-        this.trueStatement = trueStatement;
-        this.falseStatement = falseStatement;
+        this.trueStatements = trueStatements;
+        this.falseStatements = falseStatements;
     }
 
     @Override
@@ -24,12 +24,12 @@ public class IfStatementNode implements StatementNode {
         IfStatementNode other = (IfStatementNode) obj;
         return
                 this.condition.equals(other.condition) &&
-                this.trueStatement.equals(other.trueStatement) &&
-                (this.falseStatement == null && other.falseStatement == null || this.falseStatement.equals(other.falseStatement));
+                this.trueStatements.equals(other.trueStatements) &&
+                (this.falseStatements == null && other.falseStatements == null || this.falseStatements.equals(other.falseStatements));
     }
 
     @Override
     public String toString() {
-        return "IfStatementNode:[" + condition + "{" + trueStatement + "}" + (falseStatement == null ? "" : falseStatement) +"]";
+        return "IfStatementNode:[" + condition + "{" + trueStatements + "}" + (falseStatements == null ? "" : falseStatements) +"]";
     }
 }
