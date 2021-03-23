@@ -1,8 +1,19 @@
 package AST;
 
-public interface StatementNode extends ASTNode {
+import norswap.autumn.positions.Span;
+
+public abstract class StatementNode extends ASTNode {
+
+    public StatementNode (Span span) {
+        super(span);
+    }
 
     @Override
-    boolean equals(Object obj);
+    public boolean equals(Object obj){
+        if (getClass()  != obj.getClass())
+            return false;
+        StatementNode other = (StatementNode) obj;
+        return this.span.equals(other.span);
+    }
 
 }

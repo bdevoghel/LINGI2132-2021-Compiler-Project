@@ -1,10 +1,13 @@
 package AST;
 
-public class AssignmentNode implements StatementNode {
+import norswap.autumn.positions.Span;
+
+public class AssignmentNode extends StatementNode {
     private ExpressionNode variable;
     private ExpressionNode value;
 
-    public AssignmentNode(ExpressionNode variable, ExpressionNode value) {
+    public AssignmentNode(Span span, ExpressionNode variable, ExpressionNode value) {
+        super(span);
         this.variable = variable;
         this.value = value;
     }
@@ -17,6 +20,20 @@ public class AssignmentNode implements StatementNode {
         return
                 (this.value == null && other.value == null || this.value.equals(other.value)) &&
                 this.variable.equals(other.variable);
+    }
+
+    @Override public String contents ()
+    {
+        String leftEqual = variable.contents() + " = ";
+
+        String candidate = leftEqual + value.contents();
+        if (candidate.length() <= contentsBudget())
+            return candidate;
+
+        candidate = leftEqual + "(?)";
+        return candidate.length() <= contentsBudget()
+                ? candidate
+                : "(?) = (?)";
     }
 
     @Override

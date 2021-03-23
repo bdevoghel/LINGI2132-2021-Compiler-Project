@@ -1,10 +1,13 @@
 package AST;
 
-public class UnaryExpressionNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class UnaryExpressionNode extends ExpressionNode {
     private UnaryOperator operator;
     private ExpressionNode operand;
 
-    public UnaryExpressionNode(UnaryOperator operator, ExpressionNode operand) {
+    public UnaryExpressionNode(Span span, UnaryOperator operator, ExpressionNode operand) {
+        super(span);
         this.operator = operator;
         this.operand = operand;
     }
@@ -22,5 +25,14 @@ public class UnaryExpressionNode implements ExpressionNode {
     @Override
     public String toString() {
         return "UnaryExpressionNode:" + operator + operand;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

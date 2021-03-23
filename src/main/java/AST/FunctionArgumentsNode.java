@@ -1,11 +1,14 @@
 package AST;
 
+import norswap.autumn.positions.Span;
+
 import java.util.List;
 
-public class FunctionArgumentsNode implements ExpressionNode {
+public class FunctionArgumentsNode extends ExpressionNode {
     private List arguments;
 
-    public FunctionArgumentsNode(List arguments) {
+    public FunctionArgumentsNode(Span span, List arguments) {
+        super(span);
         this.arguments = arguments;
     }
 
@@ -20,5 +23,14 @@ public class FunctionArgumentsNode implements ExpressionNode {
     @Override
     public String toString() {
         return "FunctionArgumentsNode:" + arguments;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

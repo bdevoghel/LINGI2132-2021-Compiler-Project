@@ -1,9 +1,12 @@
 package AST;
 
-public class ReturnStatementNode implements StatementNode {
+import norswap.autumn.positions.Span;
+
+public class ReturnStatementNode extends StatementNode {
     private  ExpressionNode value;
 
-    public ReturnStatementNode(ExpressionNode value) {
+    public ReturnStatementNode(Span span, ExpressionNode value) {
+        super(span);
         this.value = value;
     }
 
@@ -19,5 +22,14 @@ public class ReturnStatementNode implements StatementNode {
     @Override
     public String toString() {
         return "ReturnStatementNode:" + value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

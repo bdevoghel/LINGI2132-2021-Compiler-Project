@@ -1,9 +1,12 @@
 package AST;
 
-public class PrintStatementNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class PrintStatementNode extends ExpressionNode {
     private ExpressionNode toPrint;
 
-    public PrintStatementNode(ExpressionNode toPrint) {
+    public PrintStatementNode(Span span, ExpressionNode toPrint) {
+        super(span);
         this.toPrint = toPrint;
     }
 
@@ -18,5 +21,14 @@ public class PrintStatementNode implements ExpressionNode {
     @Override
     public String toString() {
         return "PrintStatementNode:" + toPrint;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

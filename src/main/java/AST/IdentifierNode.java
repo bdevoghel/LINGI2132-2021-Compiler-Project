@@ -1,9 +1,12 @@
 package AST;
 
-public class IdentifierNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class IdentifierNode extends ExpressionNode {
     private String value;
 
-    public IdentifierNode(String value) {
+    public IdentifierNode(Span span, String value) {
+        super(span);
         this.value = value;
     }
 
@@ -22,5 +25,14 @@ public class IdentifierNode implements ExpressionNode {
 
     public String getValue(){
         return this.value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

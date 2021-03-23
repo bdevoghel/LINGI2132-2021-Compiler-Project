@@ -89,31 +89,31 @@ public final class KneghelParser extends Grammar {
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
-            .push($ -> new IdentifierNode($.str()));
+            .push($ -> new IdentifierNode($.span(), $.str()));
 
 
     // Literal
 
     public rule integer = seq(MINUS.opt(), choice('0', digit.at_least(1)))
-            .push($ -> new IntegerNode(Integer.parseInt($.str().replaceAll("\\s+",""))));
+            .push($ -> new IntegerNode($.span(), Integer.parseInt($.str().replaceAll("\\s+",""))));
 
     public rule fractional = seq('.', digit.at_least(1));
 
     public rule exponent = seq(set("eE"), set("+-").opt(), choice('0', digit.at_least(1)));
 
     public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional.opt(), exponent.opt())
-            .push($ -> new DoubleNode(Double.parseDouble($.str().replaceAll("\\s+",""))));
+            .push($ -> new DoubleNode($.span(), Double.parseDouble($.str().replaceAll("\\s+",""))));
 
     public rule number = choice(integer, doub);
 
     public rule bool = choice(_true, _false)
-            .push($ -> new BooleanNode(Boolean.parseBoolean($.str())));
+            .push($ -> new BooleanNode($.span(), Boolean.parseBoolean($.str())));
 
     public rule notStringEnd = seq(QUOTE.not(), any); // TODO add escape literals
     public rule string = seq("\"", notStringEnd.at_least(0), "\"")
             .push($ -> {
                 String s = $.str();
-                return new StringNode(s.substring(1, s.length()-1)); // slice String without quotes
+                return new StringNode($.span(), s.substring(1, s.length()-1)); // slice String without quotes
             });
 
     public rule value = choice(number, bool, identifier, string, _null).word();
@@ -122,8 +122,8 @@ public final class KneghelParser extends Grammar {
     // EXPRESSIONS & STATEMENTS
 
     // Simple expressions
-    StackPush pushBinaryExpression = $ -> new BinaryExpressionNode($.$0(), $.$1(), $.$2());
-    StackPush pushUnaryExpression = $ -> new UnaryExpressionNode($.$0(), $.$1());
+    StackPush pushBinaryExpression = $ -> new BinaryExpressionNode($.span(), $.$0(), $.$1(), $.$2());
+    StackPush pushUnaryExpression = $ -> new UnaryExpressionNode($.span(), $.$0(), $.$1());
 
     public rule prefixOp = choice(
             MINUS   .as_val(NEG),
@@ -170,16 +170,16 @@ public final class KneghelParser extends Grammar {
     public rule logicExpression = lazy(() -> choice(this.functionCallExpression, logicOrExpression, bool));
 
     public rule arrayMapAccessExpression = lazy(() -> seq(identifier, OPENBRACKET, this.expression, CLOSEBRACKET))
-            .push($ -> new ArrayMapAccessNode($.$0(), $.$1()));
+            .push($ -> new ArrayMapAccessNode($.span(), $.$0(), $.$1()));
 
     public rule expression = lazy(() -> choice(arrayMapAccessExpression, logicExpression));
 
     public rule returnStatement = seq(_return, expression)
-            .push($ -> new ReturnStatementNode($.$0()));
+            .push($ -> new ReturnStatementNode($.span(), $.$0()));
 
     // Simple statements
     public rule variableDefinition = seq(identifier, EQ, expression)
-            .push($ -> new AssignmentNode($.$0(), $.$1()));
+            .push($ -> new AssignmentNode($.span(), $.$0(), $.$1()));
 
     public rule block = lazy(() -> seq(OPENBRACE, this.statement.at_least(0), CLOSEBRACE));
 
@@ -195,10 +195,10 @@ public final class KneghelParser extends Grammar {
             .push($ -> $.$list());
 
     public rule ifStatement = seq(_if, logicExpression, OPENBRACE, statementBody, CLOSEBRACE, seq(_else, statementBody).or_push_null())
-            .push($ -> new IfStatementNode($.$0(), $.$1(), $.$2()));
+            .push($ -> new IfStatementNode($.span(), $.$0(), $.$1(), $.$2()));
 
     public rule whileStatement = seq(_while, logicExpression, OPENBRACE, statementBody, CLOSEBRACE)
-            .push($ -> new WhileStatementNode($.$0(), $.$1()));
+            .push($ -> new WhileStatementNode($.span(), $.$0(), $.$1()));
 
     // Print & Parse
 //    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
@@ -210,26 +210,27 @@ public final class KneghelParser extends Grammar {
     // Function
 
     public rule functionArguments = seq(OPENPARENT, expression.sep(0, COMMA), CLOSEPARENT)
-            .push($ -> new FunctionArgumentsNode($.$list()));
+            .push($ -> new FunctionArgumentsNode($.span(), $.$list()));
 
     public rule functionHeader = seq(_fun, identifier, functionArguments)
-            .push($ -> new FunctionStatementNode($.$0(), $.$1()));
+            .push($ -> new FunctionStatementNode($.span(), $.$0(), $.$1()));
 
     public rule functionMainHeader = seq(_fun, _main,
-            OPENPARENT, word("args").as_val(new IdentifierNode("args")), CLOSEPARENT)
+            OPENPARENT, word("args").as_val(new IdentifierNode(null, "args")), CLOSEPARENT) //TODO null for span
             .push($ -> new FunctionStatementNode(
-                    new IdentifierNode($.$0()),
-                    new FunctionArgumentsNode(Arrays.asList( (IdentifierNode)$.$1() ))));
+                    $.span(),
+                    new IdentifierNode($.span(), $.$0()),
+                    new FunctionArgumentsNode($.span(),Arrays.asList( (IdentifierNode)$.$1() ))));
 
     public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()));
 
     public rule functionCallExpression = seq(identifier, functionArguments)
-            .push($ -> new FunctionCallNode($.$0(), $.$1()));
+            .push($ -> new FunctionCallNode($.span(),$.$0(), $.$1()));
 
     // Class
     public rule classBody = seq(OPENBRACE, functionStatement.at_least(0), CLOSEBRACE)
-            .push($ -> new ClassStatementNode($.$list()));
+            .push($ -> new ClassStatementNode($.span(),$.$list()));
 
     public rule classStatement = seq(_class, identifier, classBody)
             .push($ -> ((ClassStatementNode) $.$1()).setIdentifier($.$0()));
@@ -241,7 +242,7 @@ public final class KneghelParser extends Grammar {
         return root;
     }
 
-    public ParseResult parse (String input) {
+    /**public ParseResult parse (String input) {
         ParseResult result = Autumn.parse(root, input, ParseOptions.get());
         if (result.fullMatch) {
             System.out.println(result.toString());
@@ -252,5 +253,5 @@ public final class KneghelParser extends Grammar {
             System.out.println(result.userErrorString(new LineMapString(input), "<input>"));
         }
         return result;
-    }
+    }**/
 }

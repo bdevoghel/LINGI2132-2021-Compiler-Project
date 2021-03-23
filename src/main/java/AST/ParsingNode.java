@@ -1,9 +1,12 @@
 package AST;
 
-public class ParsingNode implements ExpressionNode{
+import norswap.autumn.positions.Span;
+
+public class ParsingNode extends ExpressionNode{
     private ExpressionNode value;
 
-    public ParsingNode(ExpressionNode toParse){
+    public ParsingNode(Span span, ExpressionNode toParse){
+        super(span);
         this.value = toParse;
     }
 
@@ -18,5 +21,14 @@ public class ParsingNode implements ExpressionNode{
     @Override
     public String toString() {
         return "ParsingNode:" + value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

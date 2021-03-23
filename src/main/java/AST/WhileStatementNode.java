@@ -1,12 +1,15 @@
 package AST;
 
+import norswap.autumn.positions.Span;
+
 import java.util.List;
 
-public class WhileStatementNode implements StatementNode {
+public class WhileStatementNode extends StatementNode {
     private ExpressionNode condition;
     private List statements;
 
-    public WhileStatementNode(ExpressionNode condition, List statements) {
+    public WhileStatementNode(Span span, ExpressionNode condition, List statements) {
+        super(span);
         this.condition = condition;
         this.statements = statements;
     }
@@ -24,5 +27,14 @@ public class WhileStatementNode implements StatementNode {
     @Override
     public String toString() {
         return "WhileStatementNode:[" + condition + "{" + statements + "}"+"]";
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }
