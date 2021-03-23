@@ -1,50 +1,57 @@
 package examples;
 
 import AST.*;
+import static AST.BinaryOperator.*;
+
+import norswap.autumn.ParseResult;
 import norswap.autumn.TestFixture;
 import org.testng.annotations.Test;
 import parser.KneghelParser;
 
 import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-import static AST.BinaryOperator.*;
 
 public class KneghelExamplesTests extends TestFixture {
 
     KneghelParser parser = new KneghelParser();
 
-    @Test
-    public void testPrime() {
-        this.rule = parser.root;
-        successExpect("class Prime {\n" +
-                "    fun isPrime(number) {\n" +
-                "        if number <= 1 {\n" +
-                "            return false\n" +
-                "        }\n" +
-                "        prime = true\n" +
-                "        i = 2\n" +
-                "        while i < number && prime {\n" +
-                "            if number % i == 0 {\n" +
-                "                prime = false\n" +
-                "            }\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        return prime\n" +
-                "    }\n" +
-                "\n" +
-                "    fun main(args) {\n" +
-                "        N = int(args[0])\n" +
-                "        current = 2\n" +
-                "        count = 0\n" +
-                "        while count < N {\n" +
-                "            if isPrime(current) {\n" +
-                "                print(current)\n" +
-                "                count = count + 1\n" +
-                "            }\n" +
-                "            current = current + 1\n" +
-                "        }\n" +
-                "    }\n" +
-                "}",
+    public static void main(String[] args) {
+        String[] files = new String[] {"Fibonacci.kneghel", "FizzBuzz.kneghel", "Prime.kneghel", "Sort.kneghel", "Uniq.kneghel"};
+
+        KneghelExamplesTests test = new KneghelExamplesTests();
+        test.rule = test.parser.root;
+
+        for (int i = 0; i < files.length; i++) {
+            String content = "";
+            try {
+                Path file = Path.of("src/examples/" + files[i]);
+                content = Files.readString(file);
+            } catch (IOException e) {
+                System.err.println("Error reading file.");
+            }
+
+            System.out.println("Testing " + (i+1)+"/"+files.length + " : " + files[i]);
+            ParseResult result = null;
+            if (files[i].equals("Fibonacci.kneghel")) {
+                result = test.testFibonacci(content);
+            } else if (files[i].equals("FizzBuzz.kneghel")) {
+                result = test.testFizzBuzz(content);
+            } else if (files[i].equals("Prime.kneghel")) {
+                result = test.testPrime(content);
+            } else if (files[i].equals("Sort.kneghel")) {
+                result = test.testSort(content);
+            } else if (files[i].equals("Uniq.kneghel")) {
+                result = test.testUniq(content);
+            }
+            System.out.println(result);
+        }
+    }
+
+    public ParseResult testPrime(String testString) {
+        return successExpect(testString,
                 new ClassStatementNode(
                         Arrays.asList(
                                 new FunctionStatementNode(
@@ -93,13 +100,31 @@ public class KneghelExamplesTests extends TestFixture {
                                                                 new IfStatementNode(
                                                                         new FunctionCallNode(new IdentifierNode("isPrime"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("current")))),
                                                                         Arrays.asList(
-                                                                                new FunctionCallNode(new IdentifierNode("print"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("current")))),
+                                                                                new AssignmentNode(new IdentifierNode("_"), new FunctionCallNode(new IdentifierNode("print"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("current"))))),
                                                                                 new AssignmentNode(new IdentifierNode("count"), new BinaryExpressionNode(new IdentifierNode("count"), ADD, new IntegerNode(1))))
                                                                 ),
                                                                 new AssignmentNode(new IdentifierNode("current"), new BinaryExpressionNode(new IdentifierNode("current"), ADD, new IntegerNode(1))))
-                                                ))
+                                                ),
+                                                new ReturnStatementNode(new IntegerNode(0))
+                                                )
                                 ))
                 )
         );
+    }
+
+    public ParseResult testFibonacci(String testString) {
+        return success(testString);
+    }
+
+    public ParseResult testFizzBuzz(String testString) {
+        return success(testString);
+    }
+
+    public ParseResult testSort(String testString) {
+        return success(testString);
+    }
+
+    public ParseResult testUniq(String testString) {
+        return success(testString);
     }
 }

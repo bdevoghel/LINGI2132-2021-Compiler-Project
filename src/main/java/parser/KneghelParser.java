@@ -116,7 +116,11 @@ public final class KneghelParser extends Grammar {
                 return new StringNode(s.substring(1, s.length()-1)); // slice String without quotes
             });
 
-    public rule value = choice(number, bool, identifier, string, _null).word();
+    public rule value = lazy(() -> choice(
+            this.functionCallExpression,
+            this.arrayMapAccessExpression,
+            number, bool, identifier, string, _null
+            ).word());
 
 
     // EXPRESSIONS & STATEMENTS
@@ -167,18 +171,18 @@ public final class KneghelParser extends Grammar {
             .operand(logicAndExpression)
             .infix(BARBAR.as_val(OR), pushBinaryExpression);
 
-    public rule logicExpression = lazy(() -> choice(this.functionCallExpression, logicOrExpression, bool));
+    public rule logicExpression = logicOrExpression;
 
     public rule arrayMapAccessExpression = lazy(() -> seq(identifier, OPENBRACKET, this.expression, CLOSEBRACKET))
             .push($ -> new ArrayMapAccessNode($.$0(), $.$1()));
 
-    public rule expression = lazy(() -> choice(arrayMapAccessExpression, logicExpression));
+    public rule expression = lazy(() -> choice(this.functionCallExpression, arrayMapAccessExpression, logicExpression));
 
     public rule returnStatement = seq(_return, expression)
             .push($ -> new ReturnStatementNode($.$0()));
 
     // Simple statements
-    public rule variableDefinition = seq(identifier, EQ, expression)
+    public rule variableDefinition = seq(choice(arrayMapAccessExpression, identifier), EQ, expression)
             .push($ -> new AssignmentNode($.$0(), $.$1()));
 
     public rule block = lazy(() -> seq(OPENBRACE, this.statement.at_least(0), CLOSEBRACE));
@@ -186,7 +190,6 @@ public final class KneghelParser extends Grammar {
     public rule statement = lazy(() -> choice(
             block,
             variableDefinition,
-            this.functionCallExpression,
             this.ifStatement,
             this.whileStatement,
             this.functionStatement));

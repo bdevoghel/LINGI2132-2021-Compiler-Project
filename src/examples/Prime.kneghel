@@ -20,10 +20,11 @@ class Prime {
         count = 0
         while count < N {
             if isPrime(current) {
-                print(current)
+                _ = print(current)
                 count = count + 1
             }
             current = current + 1
         }
+        return 0
     }
 }

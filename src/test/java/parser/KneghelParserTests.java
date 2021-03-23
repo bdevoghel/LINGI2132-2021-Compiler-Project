@@ -270,10 +270,10 @@ public class KneghelParserTests extends TestFixture {
                 new IfStatementNode(
                         new BinaryExpressionNode(new IntegerNode(1), EQUAL, new IntegerNode(2)),
                         Arrays.asList(new AssignmentNode(new IdentifierNode("a"), new IntegerNode(3)))));
-        successExpect("if 1 == 2 { print(a) }",
+        successExpect("if 1 == 2 { _ = print(a) }",
                 new IfStatementNode(
                         new BinaryExpressionNode(new IntegerNode(1), EQUAL, new IntegerNode(2)),
-                        Arrays.asList(new FunctionCallNode(new IdentifierNode("print"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a")))))));
+                        Arrays.asList(new AssignmentNode(new IdentifierNode("_"), new FunctionCallNode(new IdentifierNode("print"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("a"))))))));
         successExpect("if true { a=2 } else { a=3 }",
                 new IfStatementNode(
                         new BooleanNode(true),
