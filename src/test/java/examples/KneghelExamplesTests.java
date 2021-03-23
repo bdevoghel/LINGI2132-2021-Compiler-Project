@@ -5,7 +5,6 @@ import static AST.BinaryOperator.*;
 
 import norswap.autumn.ParseResult;
 import norswap.autumn.AutumnTestFixture;
-import org.testng.annotations.Test;
 import parser.KneghelParser;
 
 import java.util.Arrays;
@@ -52,60 +51,60 @@ public class KneghelExamplesTests extends AutumnTestFixture {
 
     public ParseResult testPrime(String testString) {
         return successExpect(testString,
-                new ClassStatementNode(
+                new ClassStatementNode(null,
                         Arrays.asList(
-                                new FunctionStatementNode(
-                                        new IdentifierNode("isPrime"),
-                                        new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("number"))),
+                                new FunctionStatementNode(null,
+                                        new IdentifierNode(null, "isPrime"),
+                                        new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "number"))),
                                         Arrays.asList(
-                                                new IfStatementNode(
-                                                        new BinaryExpressionNode(new IdentifierNode("number"), LESS_OR_EQUAL, new IntegerNode(1)),
-                                                        Arrays.asList(new ReturnStatementNode(new BooleanNode(false)))
+                                                new IfStatementNode(null,
+                                                        new BinaryExpressionNode(null, new IdentifierNode(null, "number"), LESS_OR_EQUAL, new IntegerNode(null, 1)),
+                                                        Arrays.asList(new ReturnStatementNode(null, new BooleanNode(null, false)))
                                                 ),
-                                                new AssignmentNode(new IdentifierNode("prime"), new BooleanNode(true)),
-                                                new AssignmentNode(new IdentifierNode("i"), new IntegerNode(2)),
-                                                new WhileStatementNode(
-                                                        new BinaryExpressionNode(
-                                                                new BinaryExpressionNode(new IdentifierNode("i"), LESS_THAN, new IdentifierNode("number")),
+                                                new AssignmentNode(null, new IdentifierNode(null, "prime"), new BooleanNode(null, true)),
+                                                new AssignmentNode(null, new IdentifierNode(null, "i"), new IntegerNode(null, 2)),
+                                                new WhileStatementNode(null,
+                                                        new BinaryExpressionNode(null,
+                                                                new BinaryExpressionNode(null, new IdentifierNode(null, "i"), LESS_THAN, new IdentifierNode(null, "number")),
                                                                 AND,
-                                                                new IdentifierNode("prime")),
+                                                                new IdentifierNode(null, "prime")),
                                                         Arrays.asList(
-                                                                new IfStatementNode(
-                                                                    new BinaryExpressionNode(
-                                                                            new BinaryExpressionNode(new IdentifierNode("number"), MODULO, new IdentifierNode("i")),
+                                                                new IfStatementNode(null,
+                                                                    new BinaryExpressionNode(null,
+                                                                            new BinaryExpressionNode(null, new IdentifierNode(null, "number"), MODULO, new IdentifierNode(null, "i")),
                                                                             EQUAL,
-                                                                            new IntegerNode(0)),
-                                                                    Arrays.asList(new AssignmentNode(new IdentifierNode("prime"), new BooleanNode(false)))
+                                                                            new IntegerNode(null, 0)),
+                                                                    Arrays.asList(new AssignmentNode(null, new IdentifierNode(null, "prime"), new BooleanNode(null, false)))
                                                                 ),
-                                                                new AssignmentNode(new IdentifierNode("i"), new BinaryExpressionNode(new IdentifierNode("i"), ADD, new IntegerNode(1))))
+                                                                new AssignmentNode(null, new IdentifierNode(null, "i"), new BinaryExpressionNode(null, new IdentifierNode(null, "i"), ADD, new IntegerNode(null, 1))))
                                                 ),
-                                                new ReturnStatementNode(new IdentifierNode("prime")))
+                                                new ReturnStatementNode(null, new IdentifierNode(null, "prime")))
                                 ),
-                                new FunctionStatementNode(
-                                        new IdentifierNode("main"),
-                                        new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("args"))),
+                                new FunctionStatementNode(null,
+                                        new IdentifierNode(null, "main"),
+                                        new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "args"))),
                                         Arrays.asList(
-                                                new AssignmentNode(
-                                                        new IdentifierNode("N"),
-                                                        new FunctionCallNode(
-                                                                new IdentifierNode("int"),
-                                                                new FunctionArgumentsNode(
-                                                                        Arrays.asList(new ArrayMapAccessNode(new IdentifierNode("args"), new IntegerNode(0)))))
+                                                new AssignmentNode(null,
+                                                        new IdentifierNode(null, "N"),
+                                                        new FunctionCallNode(null,
+                                                                new IdentifierNode(null, "int"),
+                                                                new FunctionArgumentsNode(null,
+                                                                        Arrays.asList(new ArrayMapAccessNode(null, new IdentifierNode(null, "args"), new IntegerNode(null, 0)))))
                                                 ),
-                                                new AssignmentNode(new IdentifierNode("current"), new IntegerNode(2)),
-                                                new AssignmentNode(new IdentifierNode("count"), new IntegerNode(0)),
-                                                new WhileStatementNode(
-                                                        new BinaryExpressionNode(new IdentifierNode("count"), LESS_THAN, new IdentifierNode("N")),
+                                                new AssignmentNode(null, new IdentifierNode(null, "current"), new IntegerNode(null, 2)),
+                                                new AssignmentNode(null, new IdentifierNode(null, "count"), new IntegerNode(null, 0)),
+                                                new WhileStatementNode(null,
+                                                        new BinaryExpressionNode(null, new IdentifierNode(null, "count"), LESS_THAN, new IdentifierNode(null, "N")),
                                                         Arrays.asList(
-                                                                new IfStatementNode(
-                                                                        new FunctionCallNode(new IdentifierNode("isPrime"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("current")))),
+                                                                new IfStatementNode(null,
+                                                                        new FunctionCallNode(null, new IdentifierNode(null, "isPrime"), new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "current")))),
                                                                         Arrays.asList(
-                                                                                new AssignmentNode(new IdentifierNode("_"), new FunctionCallNode(new IdentifierNode("print"), new FunctionArgumentsNode(Arrays.asList(new IdentifierNode("current"))))),
-                                                                                new AssignmentNode(new IdentifierNode("count"), new BinaryExpressionNode(new IdentifierNode("count"), ADD, new IntegerNode(1))))
+                                                                                new AssignmentNode(null, new IdentifierNode(null, "_"), new FunctionCallNode(null, new IdentifierNode(null, "print"), new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "current"))))),
+                                                                                new AssignmentNode(null, new IdentifierNode(null, "count"), new BinaryExpressionNode(null, new IdentifierNode(null, "count"), ADD, new IntegerNode(null, 1))))
                                                                 ),
-                                                                new AssignmentNode(new IdentifierNode("current"), new BinaryExpressionNode(new IdentifierNode("current"), ADD, new IntegerNode(1))))
+                                                                new AssignmentNode(null, new IdentifierNode(null, "current"), new BinaryExpressionNode(null, new IdentifierNode(null, "current"), ADD, new IntegerNode(null, 1))))
                                                 ),
-                                                new ReturnStatementNode(new IntegerNode(0))
+                                                new ReturnStatementNode(null, new IntegerNode(null, 0))
                                                 )
                                 ))
                 )
