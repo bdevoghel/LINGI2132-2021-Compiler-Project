@@ -3,16 +3,17 @@ class FizzBuzz {
         i = 1
         while i<=100{
             if i%15==0{
-                print("FizzBuzz")
+                _= print("FizzBuzz")
             } else if i %3 ==0 {
-                print("Fizz")
+                _ =print("Fizz")
             } else if i% 5== 0 {
-                print(" - Buzz")
+                _=print(" - Buzz")
             } else {
-                print(i)
+                _ = print(i)
             }
 
             i=i+1
         }
+        return 0
     }
 }

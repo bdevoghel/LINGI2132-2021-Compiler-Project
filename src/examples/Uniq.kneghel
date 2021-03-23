@@ -1,14 +1,15 @@
 class Uniq {
 
     fun main(args) {
-        m = {}
+        m = makeDict()
         i = 0
         while i < len(args) {
             if m[args[i]] == null {
-                print(args[i])
+                _ = print(args[i])
                 m[args[i]] = true
             }
             i = i + 1
         }
+        return 0
     }
 }

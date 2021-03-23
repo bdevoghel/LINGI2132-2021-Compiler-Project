@@ -286,7 +286,7 @@ public class KneghelParserTests extends AutumnTestFixture {
                 new IfStatementNode(
                         null,
                         new BinaryExpressionNode(null,new IntegerNode(null,1), EQUAL, new IntegerNode(null,2)),
-                        Arrays.asList(new FunctionCallNode(null,new IdentifierNode(null,"print"), new FunctionArgumentsNode(null,Arrays.asList(new IdentifierNode(null,"a")))))));
+                        Arrays.asList(new AssignmentNode(null, new IdentifierNode(null, "_"), new FunctionCallNode(null,new IdentifierNode(null,"print"), new FunctionArgumentsNode(null,Arrays.asList(new IdentifierNode(null,"a"))))))));
         successExpect("if true { a=2 } else { a=3 }",
                 new IfStatementNode(
                         null,
