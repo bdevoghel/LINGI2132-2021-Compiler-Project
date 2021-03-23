@@ -4,7 +4,6 @@ import AST.*;
 import org.testng.annotations.Test;
 import norswap.autumn.AutumnTestFixture;
 
-import java.awt.*;
 import java.util.*;
 
 import static AST.BinaryOperator.*;
@@ -76,7 +75,7 @@ public class KneghelParserTests extends AutumnTestFixture {
 
     @Test
     public void testValues() {
-        this.rule = parser.prefixExpression; // value = choice(integer, bool, identifier, string) with (optional) prefix
+        this.rule = parser.prefixExpression;
         success("1");
         success("-1");
         successExpect("- 1", new UnaryExpressionNode(null, NEG, new IntegerNode(null,1)));
@@ -282,7 +281,7 @@ public class KneghelParserTests extends AutumnTestFixture {
                         null,
                         new BinaryExpressionNode(null,new IntegerNode(null,1), EQUAL, new IntegerNode(null,2)),
                         Arrays.asList(new AssignmentNode(null,new IdentifierNode(null,"a"), new IntegerNode(null,3)))));
-        successExpect("if 1 == 2 { print(a) }",
+        successExpect("if 1 == 2 { _ = print(a) }",
                 new IfStatementNode(
                         null,
                         new BinaryExpressionNode(null,new IntegerNode(null,1), EQUAL, new IntegerNode(null,2)),
