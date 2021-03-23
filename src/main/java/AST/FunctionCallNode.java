@@ -1,10 +1,13 @@
 package AST;
 
-public class FunctionCallNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class FunctionCallNode extends ExpressionNode {
     private IdentifierNode function;
     private FunctionArgumentsNode arguments;
 
-    public FunctionCallNode(IdentifierNode function, FunctionArgumentsNode arguments) {
+    public FunctionCallNode(Span span, IdentifierNode function, FunctionArgumentsNode arguments) {
+        super(span);
         this.function = function;
         this.arguments = arguments;
     }
@@ -20,5 +23,14 @@ public class FunctionCallNode implements ExpressionNode {
     @Override
     public String toString() {
         return "FunctionCallNode:" + function + "(" + arguments + ")";
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

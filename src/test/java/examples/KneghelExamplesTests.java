@@ -4,7 +4,7 @@ import AST.*;
 import static AST.BinaryOperator.*;
 
 import norswap.autumn.ParseResult;
-import norswap.autumn.TestFixture;
+import norswap.autumn.AutumnTestFixture;
 import org.testng.annotations.Test;
 import parser.KneghelParser;
 
@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 
-public class KneghelExamplesTests extends TestFixture {
+public class KneghelExamplesTests extends AutumnTestFixture {
 
     KneghelParser parser = new KneghelParser();
 

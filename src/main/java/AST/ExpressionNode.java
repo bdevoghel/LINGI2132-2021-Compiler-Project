@@ -1,8 +1,20 @@
 package AST;
 
-public interface ExpressionNode extends ASTNode {
+import norswap.autumn.positions.Span;
+
+public abstract class ExpressionNode extends ASTNode {
+
+    public ExpressionNode (Span span) {
+        super(span);
+    }
+
 
     @Override
-    boolean equals(Object obj);
+    public boolean equals(Object obj){
+        if (getClass()  != obj.getClass())
+            return false;
+        ExpressionNode other = (ExpressionNode) obj;
+        return this.span.equals(other.span);
+    }
 
 }

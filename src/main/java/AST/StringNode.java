@@ -1,9 +1,12 @@
 package AST;
 
-public class StringNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class StringNode extends ExpressionNode {
     private String value;
 
-    public StringNode(String value) {
+    public StringNode(Span span, String value) {
+        super(span);
         this.value = value;
     }
 
@@ -22,5 +25,14 @@ public class StringNode implements ExpressionNode {
 
     public String getValue(){
         return this.value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

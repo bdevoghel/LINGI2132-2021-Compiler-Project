@@ -1,9 +1,12 @@
 package AST;
 
-public class BooleanNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class BooleanNode extends ExpressionNode {
     private boolean value;
 
-    public BooleanNode(boolean value){
+    public BooleanNode(Span span, boolean value){
+        super(span);
         this.value = value;
     }
 
@@ -19,5 +22,14 @@ public class BooleanNode implements ExpressionNode {
     @Override
     public String toString() {
         return "BooleanNode:" + value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

@@ -1,18 +1,22 @@
 package AST;
 
+import norswap.autumn.positions.Span;
+
 import java.util.List;
 
-public class FunctionStatementNode implements StatementNode {
+public class FunctionStatementNode extends StatementNode {
     private IdentifierNode identifier;
     private FunctionArgumentsNode arguments;
     private List statement;
 
-    public FunctionStatementNode(IdentifierNode identifier, FunctionArgumentsNode arguments) {
+    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments) {
+        super(span);
         this.identifier = identifier;
         this.arguments = arguments;
     }
 
-    public FunctionStatementNode(IdentifierNode identifier, FunctionArgumentsNode arguments, List statement) {
+    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments, List statement) {
+        super(span);
         this.identifier = identifier;
         this.arguments = arguments;
         this.statement = statement;
@@ -37,5 +41,14 @@ public class FunctionStatementNode implements StatementNode {
     @Override
     public String toString() {
         return "FunctionStatementNode:[" + identifier + "(" + arguments + "){" + statement + "}"+"]";
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }

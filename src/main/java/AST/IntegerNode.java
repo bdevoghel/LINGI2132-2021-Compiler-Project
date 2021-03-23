@@ -1,9 +1,12 @@
 package AST;
 
-public class IntegerNode implements ExpressionNode {
+import norswap.autumn.positions.Span;
+
+public class IntegerNode extends ExpressionNode {
     private int value;
 
-    public IntegerNode(int value) {
+    public IntegerNode(Span span, int value) {
+        super(span);
         this.value = value;
     }
 
@@ -18,5 +21,14 @@ public class IntegerNode implements ExpressionNode {
     @Override
     public String toString() {
         return "IntegerNode:" + value;
+    }
+
+    /**
+     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
+     * in a single line.
+     */
+    @Override
+    public String contents() {
+        return this.toString();
     }
 }
