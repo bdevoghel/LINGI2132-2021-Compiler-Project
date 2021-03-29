@@ -1,6 +1,7 @@
 package AST;
 
 import norswap.autumn.positions.Span;
+import norswap.uranium.Attribute;
 
 public abstract class ASTNode {
 
@@ -35,4 +36,10 @@ public abstract class ASTNode {
         // 2 == "()".length() - "Node".length
     }
 
+    /**
+     * Returns an attribute with the given name on this node.
+     */
+    public final Attribute attr (String name) {
+        return new Attribute(this, name);
+    }
 }

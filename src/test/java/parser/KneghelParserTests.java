@@ -32,6 +32,7 @@ public class KneghelParserTests extends AutumnTestFixture {
         this.rule = parser.doub;
         success("1.0");
         success("1234.1234");
+        successExpect("5", new DoubleNode(null, 5.0));
         failure("a");
         successExpect("1.0", new DoubleNode(null, 1.0));
         successExpect("1.23e-10", new DoubleNode(null,1.23e-10));

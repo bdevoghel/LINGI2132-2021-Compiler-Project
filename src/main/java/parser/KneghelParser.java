@@ -110,6 +110,7 @@ public final class KneghelParser extends Grammar {
             .push($ -> new BooleanNode($.span(), Boolean.parseBoolean($.str())));
 
     public rule notStringEnd = seq(QUOTE.not(), any); // TODO add escape literals
+
     public rule string = seq("\"", notStringEnd.at_least(0), "\"")
             .push($ -> {
                 String s = $.str();

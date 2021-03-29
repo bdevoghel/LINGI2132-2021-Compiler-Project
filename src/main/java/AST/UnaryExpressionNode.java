@@ -3,8 +3,8 @@ package AST;
 import norswap.autumn.positions.Span;
 
 public class UnaryExpressionNode extends ExpressionNode {
-    private UnaryOperator operator;
-    private ExpressionNode operand;
+    public UnaryOperator operator;
+    public ExpressionNode operand;
 
     public UnaryExpressionNode(Span span, UnaryOperator operator, ExpressionNode operand) {
         super(span);

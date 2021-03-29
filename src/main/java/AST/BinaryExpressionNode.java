@@ -3,9 +3,9 @@ package AST;
 import norswap.autumn.positions.Span;
 
 public class BinaryExpressionNode extends ExpressionNode {
-    private BinaryOperator operator;
-    private ASTNode leftChild;
-    private ASTNode rightChild;
+    public BinaryOperator operator;
+    public ASTNode leftChild;
+    public ASTNode rightChild;
 
     public BinaryExpressionNode(Span span, ASTNode leftChild, BinaryOperator operator, ASTNode rightChild) {
         super(span);

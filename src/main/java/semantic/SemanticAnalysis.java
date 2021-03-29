@@ -6,9 +6,7 @@ import norswap.uranium.Rule;
 import norswap.utils.visitors.ReflectiveFieldWalker;
 import norswap.utils.visitors.Walker;
 import scopes.*;
-import types.BoolType;
-import types.IntType;
-import types.Type;
+import types.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +54,15 @@ public final class SemanticAnalysis {
 
         SemanticAnalysis analysis = new SemanticAnalysis(reactor);
 
+        //Expression
+        walker.register(IntegerNode.class,              PRE_VISIT, analysis::integer);
+        walker.register(DoubleNode.class,               PRE_VISIT, analysis::doub);
+        walker.register(BooleanNode.class,              PRE_VISIT, analysis::bool);
+        walker.register(StringNode.class,               PRE_VISIT, analysis::string);
+        walker.register(IdentifierNode.class,           PRE_VISIT, analysis::identifier);
+        walker.register(UnaryExpressionNode.class,      PRE_VISIT, analysis::unaryExpression);
+        walker.register(BinaryExpressionNode.class,     PRE_VISIT, analysis::binaryExpression);
+
         // Fallback rules
         walker.registerFallback(PRE_VISIT, node -> {
         });
@@ -64,6 +71,164 @@ public final class SemanticAnalysis {
 
 
         return walker;
+    }
+
+    private void integer (IntegerNode node) {
+        R.set(node, "type", IntType.INSTANCE);
+    }
+
+    private void doub (DoubleNode node) {
+        R.set(node, "type", DoubleType.INSTANCE);
+    }
+
+    private void bool (BooleanNode node) {
+        R.set(node, "type", BoolType.INSTANCE);
+    }
+
+    private void string (StringNode node) {
+        R.set(node, "type", StringType.INSTANCE);
+    }
+
+    private void identifier (IdentifierNode node) {
+        final Scope scope = this.scope;
+
+        DeclarationContext maybeCtx = scope.lookup(node.getValue());
+
+        if (maybeCtx != null) {
+            R.set(node, "decl", maybeCtx.declaration);
+            R.set(node, "scope", maybeCtx.scope);
+
+            R.rule(node, "type").using(maybeCtx.declaration, "type")
+                    .by(Rule::copyFirst);
+            return;
+        }
+
+        // Re-lookup after the scopes have been built.
+        R.rule(node.attr("decl"), node.attr("scope"))
+                .by(r -> {
+                    DeclarationContext ctx = scope.lookup(node.getValue());
+                    DeclarationNode decl = ctx == null ? null : ctx.declaration;
+
+                    if (ctx == null) {
+                        r.errorFor("Could not resolve: " + node.getValue(),
+                                node, node.attr("decl"), node.attr("scope"), node.attr("type"));
+                    }
+                    else {
+                        r.set(node, "scope", ctx.scope);
+                        r.set(node, "decl", decl);
+
+                        if (decl instanceof DeclarationNode)
+                            r.errorFor("Variable used before declaration: " + node.getValue(),
+                                    node, node.attr("type"));
+                        else
+                            R.rule(node, "type")
+                                    .using(decl, "type")
+                                    .by(Rule::copyFirst);
+                    }
+                });
+    }
+
+    private void binaryExpression (BinaryExpressionNode node)
+    {
+        R.rule(node, "type")
+                .using(node.leftChild.attr("type"), node.rightChild.attr("type"))
+                .by(r -> {
+                    Type left  = r.get(0);
+                    Type right = r.get(1);
+
+                    if (node.operator == ADD || node.operator == SUBTRACT || node.operator == MULTIPLY || node.operator == DIVIDE || node.operator == MODULO){
+                        binaryArithmetic(r, node, left, right);}
+                    else if (node.operator == EQUAL || node.operator == NOT_EQUAL){
+                        binaryEquality(r, node, left, right);}
+                    else if (node.operator == GREATER_THAN || node.operator == GREATER_OR_EQUAL || node.operator == LESS_OR_EQUAL || node.operator == LESS_THAN){
+                        binaryComparison(r, node, left, right);
+                    }
+                });
+    }
+
+    //TODO accept double : do we accept operation between doubles and integers?
+    private void binaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right)
+    {
+        if (left instanceof IntType)
+            if (right instanceof IntType)
+                r.set(0, IntType.INSTANCE);
+            else
+                r.error(arithmeticError(node, "Int", right), node);
+        else
+            r.error(arithmeticError(node, left, right), node);
+    }
+
+    private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
+        return format("Trying to %s %s with %s", node.operator.name().toLowerCase(), left, right);
+    }
+
+    private void binaryEquality (Rule r, BinaryExpressionNode node, Type left, Type right)
+    {
+        r.set(0, BoolType.INSTANCE);
+
+        if (!isComparableTo(left, right))
+            r.errorFor(format("Trying to compare incomparable types %s and %s", left, right),
+                    node);
+    }
+
+    private static boolean isComparableTo (Type a, Type b)
+    {
+        return a.isReference() && b.isReference()
+                || a.equals(b);
+    }
+
+    private void binaryComparison (Rule r, BinaryExpressionNode node, Type left, Type right)
+    {
+        r.set(0, BoolType.INSTANCE);
+
+        if (!(left instanceof IntType) && !(left instanceof DoubleType))
+            r.errorFor("Attempting to perform arithmetic comparison on non-numeric type: " + left,
+                    node.leftChild);
+        if (!(right instanceof IntType) && !(right instanceof DoubleType))
+            r.errorFor("Attempting to perform arithmetic comparison on non-numeric type: " + right,
+                    node.rightChild);
+    }
+
+    private void unaryExpression(UnaryExpressionNode node) {
+
+        if (node.operator == UnaryOperator.NEG) {
+            if (node.operand instanceof IntegerNode){
+                R.set(node, "type", IntType.INSTANCE);
+
+                R.rule()
+                        .using(node.operand, "type")
+                        .by(r -> {
+                            Type opType = r.get(0);
+                            if (!(opType instanceof IntType))
+                                r.error("Trying to negate type: " + opType, node);
+                        });
+            }
+            else if (node.operand instanceof DoubleNode){
+                R.set(node, "type", DoubleType.INSTANCE);
+
+                R.rule()
+                        .using(node.operand, "type")
+                        .by(r -> {
+                            Type opType = r.get(0);
+                            if (!(opType instanceof DoubleType))
+                                r.error("Trying to negate type: " + opType, node);
+                        });
+            }
+
+
+        }
+        else if (node.operator == UnaryOperator.NOT){
+            R.set(node, "type", BoolType.INSTANCE);
+
+            R.rule()
+                .using(node.operand, "type")
+                .by(r -> {
+                    Type opType = r.get(0);
+                    if (!(opType instanceof BoolType))
+                        r.error("Trying to negate type: " + opType, node);
+                });
+        }
+
     }
 
     /**private void simpleType (SimpleTypeNode node)
