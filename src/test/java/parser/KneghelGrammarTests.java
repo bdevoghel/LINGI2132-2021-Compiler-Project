@@ -9,9 +9,9 @@ import java.util.*;
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
 
-public class KneghelParserTests extends AutumnTestFixture {
+public class KneghelGrammarTests extends AutumnTestFixture {
 
-    KneghelParser parser = new KneghelParser();
+    KneghelGrammar parser = new KneghelGrammar();
 
     @Test
     public void testInteger() {
@@ -32,8 +32,9 @@ public class KneghelParserTests extends AutumnTestFixture {
         this.rule = parser.doub;
         success("1.0");
         success("1234.1234");
-        successExpect("5", new DoubleNode(null, 5.0));
-        failure("a");
+        successExpect("5.", new DoubleNode(null, 5.0));
+        successExpect("5.0", new DoubleNode(null, 5.0));
+        failure("5");
         successExpect("1.0", new DoubleNode(null, 1.0));
         successExpect("1.23e-10", new DoubleNode(null,1.23e-10));
         successExpect("1.23e+10", new DoubleNode(null, 1.23e+10));
@@ -45,6 +46,7 @@ public class KneghelParserTests extends AutumnTestFixture {
         failure("- 1 .1234");
         failure("- 1.23 e10");
         failure("- 1.23e 10");
+        failure("a");
         failure("-a");
         successExpect("-1.1234", new DoubleNode(null, -1.1234));
         successExpect("- 1.1234", new DoubleNode(null,-1.1234));

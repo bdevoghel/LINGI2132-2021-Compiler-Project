@@ -1,3 +1,7 @@
+/*
+ * In part inspired by https://github.com/norswap/sigh/blob/775535d6aa6c85dd8b1881718e5e2a34efc6d5dd/src/norswap/sigh/SemanticAnalysis.java
+ */
+
 package semantic;
 import AST.*;
 import norswap.uranium.Attribute;
@@ -21,9 +25,6 @@ import static norswap.utils.visitors.WalkVisitType.POST_VISIT;
 import static norswap.utils.visitors.WalkVisitType.PRE_VISIT;
 
 public final class SemanticAnalysis {
-    // =============================================================================================
-    // region [Initialization]
-    // =============================================================================================
 
     private final Reactor R;
 
@@ -60,14 +61,23 @@ public final class SemanticAnalysis {
         walker.register(BooleanNode.class,              PRE_VISIT, analysis::bool);
         walker.register(StringNode.class,               PRE_VISIT, analysis::string);
         walker.register(IdentifierNode.class,           PRE_VISIT, analysis::identifier);
+
         walker.register(UnaryExpressionNode.class,      PRE_VISIT, analysis::unaryExpression);
         walker.register(BinaryExpressionNode.class,     PRE_VISIT, analysis::binaryExpression);
 
+//        walker.register(ArrayMapAccessNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::??);
+//        walker.register(ClassStatementNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(FunctionCallNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(FunctionStatementNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(IfStatementNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(RootNode.class,     PRE_VISIT, analysis::??); // TODO needed ?
+
         // Fallback rules
-        walker.registerFallback(PRE_VISIT, node -> {
-        });
-        walker.registerFallback(POST_VISIT, node -> {
-        });
+        walker.registerFallback(PRE_VISIT, node -> {});
+        walker.registerFallback(POST_VISIT, node -> {});
 
 
         return walker;

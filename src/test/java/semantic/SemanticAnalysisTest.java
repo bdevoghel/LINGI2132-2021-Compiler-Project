@@ -6,12 +6,13 @@ import norswap.autumn.positions.LineMapString;
 import norswap.uranium.Reactor;
 import norswap.uranium.UraniumTestFixture;
 import norswap.utils.visitors.Walker;
-import parser.KneghelParser;
+import parser.KneghelGrammar;
 import org.testng.annotations.Test;
 
 
-public class SemanticTest extends UraniumTestFixture {
-    private final KneghelParser grammar = new KneghelParser();
+public class SemanticAnalysisTest extends UraniumTestFixture {
+
+    private final KneghelGrammar grammar = new KneghelGrammar();
     private final AutumnTestFixture autumnFixture = new AutumnTestFixture();
 
     {
@@ -53,8 +54,8 @@ public class SemanticTest extends UraniumTestFixture {
     @Test
     public void testDouble(){
         autumnFixture.rule = grammar.doub;
+        successInput("5.");
         successInput("5.0");
-        successInput("5");
         successInput("-5478.32"); //TODO failure input
     }
 

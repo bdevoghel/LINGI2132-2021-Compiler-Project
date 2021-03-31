@@ -17,7 +17,7 @@ import java.util.Arrays;
 import static AST.BinaryOperator.*;
 import static AST.UnaryOperator.*;
 
-public final class KneghelParser extends Grammar {
+public final class KneghelGrammar extends Grammar {
 
     // LEXICAL
 
@@ -97,11 +97,11 @@ public final class KneghelParser extends Grammar {
     public rule integer = seq(MINUS.opt(), choice('0', digit.at_least(1)))
             .push($ -> new IntegerNode($.span(), Integer.parseInt($.str().replaceAll("\\s+",""))));
 
-    public rule fractional = seq('.', digit.at_least(1));
+    public rule fractional = seq('.', digit.at_least(0));
 
     public rule exponent = seq(set("eE"), set("+-").opt(), choice('0', digit.at_least(1)));
 
-    public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional.opt(), exponent.opt())
+    public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional, exponent.opt())
             .push($ -> new DoubleNode($.span(), Double.parseDouble($.str().replaceAll("\\s+",""))));
 
     public rule number = choice(integer, doub);

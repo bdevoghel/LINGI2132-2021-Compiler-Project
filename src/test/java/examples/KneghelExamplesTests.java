@@ -5,7 +5,7 @@ import static AST.BinaryOperator.*;
 
 import norswap.autumn.ParseResult;
 import norswap.autumn.AutumnTestFixture;
-import parser.KneghelParser;
+import parser.KneghelGrammar;
 
 import java.util.Arrays;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.nio.file.Path;
 
 public class KneghelExamplesTests extends AutumnTestFixture {
 
-    KneghelParser parser = new KneghelParser();
+    KneghelGrammar parser = new KneghelGrammar();
 
     public static void main(String[] args) {
         String[] files = new String[] {"Fibonacci.kneghel", "FizzBuzz.kneghel", "Prime.kneghel", "Sort.kneghel", "Uniq.kneghel"};
