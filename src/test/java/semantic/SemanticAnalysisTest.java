@@ -94,7 +94,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         autumnFixture.rule = grammar.prefixExpression;
         successInput("-1");
         successInput("!true");
-        //successInput("- 2.0"); // TODO does not work
+        successInput("- 2.0");
     }
 
 

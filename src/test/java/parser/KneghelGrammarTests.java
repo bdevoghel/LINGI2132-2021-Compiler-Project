@@ -81,6 +81,8 @@ public class KneghelGrammarTests extends AutumnTestFixture {
         this.rule = parser.prefixExpression;
         success("1");
         success("-1");
+        success("1.0");
+        success("-1.0");
         successExpect("- 1", new UnaryExpressionNode(null, NEG, new IntegerNode(null,1)));
         success("a");
         success("-a");

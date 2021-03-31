@@ -104,7 +104,7 @@ public final class KneghelGrammar extends Grammar {
     public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional, exponent.opt())
             .push($ -> new DoubleNode($.span(), Double.parseDouble($.str().replaceAll("\\s+",""))));
 
-    public rule number = choice(integer, doub);
+    public rule number = choice(doub, integer);
 
     public rule bool = choice(_true, _false)
             .push($ -> new BooleanNode($.span(), Boolean.parseBoolean($.str())));
