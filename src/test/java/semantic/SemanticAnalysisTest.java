@@ -145,11 +145,11 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         failureInput("a, 30)");
     }
 
-    /*@Test
+    @Test
     public void testFunctionHeader() {
         autumnFixture.rule = grammar.functionHeader;
-        successInput();
-    }*/
+        successInput("fun foo(a,b)");
+    }
 
     /*@Test
     public void testIfStatement(){
