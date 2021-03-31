@@ -2,12 +2,18 @@ package AST;
 
 import norswap.autumn.positions.Span;
 
-public class AssignmentNode extends StatementNode {
+public class AssignmentNode extends DeclarationNode {
+    private ASTNode kind;
     private ExpressionNode variable;
     private ExpressionNode value;
 
     public AssignmentNode(Span span, ExpressionNode variable, ExpressionNode value) {
+        this(span, null, variable, value);
+    }
+
+    public AssignmentNode(Span span, ASTNode kind, ExpressionNode variable, ExpressionNode value) {
         super(span);
+        this.kind = kind;
         this.variable = variable;
         this.value = value;
     }
@@ -39,5 +45,15 @@ public class AssignmentNode extends StatementNode {
     @Override
     public String toString() {
         return "AssignmentNode:[" + variable + "=" + value + "]";
+    }
+
+    @Override
+    public String name() {
+        return variable.toString();
+    }
+
+    @Override
+    public String declaredThing() {
+        return null;
     }
 }
