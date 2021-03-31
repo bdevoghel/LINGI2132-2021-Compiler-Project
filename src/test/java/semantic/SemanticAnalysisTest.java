@@ -44,7 +44,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     }
 
     @Test
-    public void testInteger(){
+    public void testInteger() {
         autumnFixture.rule = grammar.integer;
         successInput("5");
         successInput("5655"); //TODO failure input
@@ -52,7 +52,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     }
 
     @Test
-    public void testDouble(){
+    public void testDouble() {
         autumnFixture.rule = grammar.doub;
         successInput("5.");
         successInput("5.0");
@@ -60,7 +60,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     }
 
     @Test
-    public void testBool(){
+    public void testBool() {
         autumnFixture.rule = grammar.bool;
         successInput("true");
         successInput("false"); //TODO failure input
@@ -97,6 +97,59 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         successInput("- 2.0");
     }
 
+    @Test
+    public void testArrayMapAccess() {
+        autumnFixture.rule = grammar.arrayMapAccessExpression;
+        successInput("a[i]");
+        successInput("a[1+2]");
+        successInput("a[0]");
+    }
+
+    @Test
+    public void testVariableDef() {
+        autumnFixture.rule = grammar.variableDefinition;
+        successInput("a=1");
+        successInput("a = true");
+        successInput("a = b");
+        successInput("a=1");
+        successInput("a = \"coucou\"");
+        successInput("a=null");
+        successInput("abc = 1");
+        successInput("a = 1 - 2");
+        successInput("a = 1 / 2");
+        successInput("a = false || true && true");
+        failureInput("if = 5");
+        failureInput("true = 6");
+        failureInput("1 = a");
+        failureInput("a = //coucou");
+    }
+
+    @Test
+    public void testClasses() {
+        autumnFixture.rule = grammar.classStatement;
+        successInput("class Foo {}");
+        successInput("class Foo { fun bar() {return 1} }");
+    }
+
+    @Test
+    public void testFunctionArguments() {
+        autumnFixture.rule = grammar.functionArguments;
+        successInput("(a, 25, 30)");
+        successInput("()");
+        successInput("(b)");
+        successInput("(true)");
+        failureInput("true");
+        failureInput("a, b");
+        failureInput("");
+        failureInput("(a,b");
+        failureInput("a, 30)");
+    }
+
+    /*@Test
+    public void testFunctionHeader() {
+        autumnFixture.rule = grammar.functionHeader;
+        successInput();
+    }*/
 
     /*@Test
     public void testIfStatement(){
