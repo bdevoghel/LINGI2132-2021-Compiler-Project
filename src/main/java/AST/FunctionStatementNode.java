@@ -4,10 +4,10 @@ import norswap.autumn.positions.Span;
 
 import java.util.List;
 
-public class FunctionStatementNode extends StatementNode {
-    private IdentifierNode identifier;
-    private FunctionArgumentsNode arguments;
-    private List statement;
+public class FunctionStatementNode extends DeclarationNode {
+    public IdentifierNode identifier;
+    public FunctionArgumentsNode arguments;
+    public List statement;
 
     public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments) {
         super(span);
@@ -50,5 +50,15 @@ public class FunctionStatementNode extends StatementNode {
     @Override
     public String contents() {
         return this.toString();
+    }
+
+    @Override
+    public String name() {
+        return identifier.toString();
+    }
+
+    @Override
+    public String declaredThing() {
+        return null;
     }
 }

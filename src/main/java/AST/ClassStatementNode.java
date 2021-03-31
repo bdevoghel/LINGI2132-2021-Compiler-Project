@@ -5,8 +5,8 @@ import norswap.autumn.positions.Span;
 import java.util.List;
 
 public class ClassStatementNode extends StatementNode {
-    private  IdentifierNode identifier;
-    private List functions;
+    public IdentifierNode identifier;
+    public List functions;
 
     public ClassStatementNode(Span span, List functions) {
         super(span);

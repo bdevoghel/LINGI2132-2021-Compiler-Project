@@ -35,7 +35,7 @@ public class Scope
     /**
      * Adds a new declaration to this scope.
      */
-    public void declare (String identifier, SyntheticDeclarationNode node) {
+    public void declare (String identifier, DeclarationNode node) {
         declarations.put(identifier, node);
     }
 

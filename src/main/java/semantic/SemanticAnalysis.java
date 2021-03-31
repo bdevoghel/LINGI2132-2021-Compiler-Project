@@ -12,13 +12,10 @@ import norswap.utils.visitors.Walker;
 import scopes.*;
 import types.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
 import static java.lang.String.format;
-import static norswap.utils.Vanilla.list;
 import static norswap.utils.Util.cast;
+import static norswap.utils.Vanilla.forEachIndexed;
+
 
 import static AST.BinaryOperator.*;
 import static norswap.utils.visitors.WalkVisitType.POST_VISIT;
@@ -41,6 +38,7 @@ public final class SemanticAnalysis {
 
     private SemanticAnalysis(Reactor reactor) {
         this.R = reactor;
+        this.scope = new RootScope(null, R);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -67,13 +65,13 @@ public final class SemanticAnalysis {
 
         walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
 //        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::??);
-//        walker.register(ClassStatementNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(FunctionCallNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(FunctionStatementNode.class,     PRE_VISIT, analysis::??);
+        walker.register(FunctionStatementNode.class,     PRE_VISIT, analysis::functionStatement);
 //        walker.register(IfStatementNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(RootNode.class,     PRE_VISIT, analysis::??); // TODO needed ?
+//        walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
+        walker.register(RootNode.class,                 PRE_VISIT, analysis::root);
 
         // Fallback rules
         walker.registerFallback(PRE_VISIT, node -> {});
@@ -111,6 +109,7 @@ public final class SemanticAnalysis {
     private void identifier (IdentifierNode node) {
         final Scope scope = this.scope;
 
+        // TODO take context in scope into account
         DeclarationContext maybeCtx = scope.lookup(node.getValue());
 
         // Try to lookup immediately. This must succeed for variables, but not necessarily for functions or types.
@@ -261,6 +260,62 @@ public final class SemanticAnalysis {
                     else
                         r.error("Trying to index a non-array expression of type " + type, node);
                 });
+    }
+
+    private void functionStatement (FunctionStatementNode node) {
+        scope.declare(node.identifier.toString(), node);
+        scope = new Scope(node, scope);
+        R.set(node, "scope", scope);
+
+        Attribute[] dependencies = new Attribute[node.arguments.elements.size()];
+//        dependencies[0] = node.returnType.attr("value");
+//        forEachIndexed(node.arguments.elements, (i, param) ->
+//                dependencies[i] = param.attr("type"));
+//
+//        R.rule(node, "type")
+//                .using(dependencies)
+//                .by (r -> {
+//                    Type[] paramTypes = new Type[node.parameters.size()];
+//                    for (int i = 0; i < paramTypes.length; ++i)
+//                        paramTypes[i] = r.get(i + 1);
+//                    r.set(0, new FunType(r.get(0), paramTypes));
+//                });
+//
+//        R.rule()
+//                .using(node.block.attr("returns"), node.returnType.attr("value"))
+//                .by(r -> {
+//                    boolean returns = r.get(0);
+//                    Type returnType = r.get(1);
+//                    if (!returns && !(returnType instanceof VoidType))
+//                        r.error("Missing return in function.", node);
+//                    // NOTE: The returned value presence & type is checked in returnStmt().
+//                });
+//    }
+
+//    private void classStatement (ClassStatementNode node) {
+//        scope.declare(node.identifier.toString(), );
+//        scope = new Scope(node, scope);
+//        R.set(node, "scope", scope);
+//
+//        if (node.identifier instanceof IdentifierNode) {
+//            R.rule()
+//                    .using(node.identifier, "type")
+//                    .by(r -> {
+//                        Type type = r.get(0);
+//                        if (!(type instanceof ClassType)) {
+//                            r.error("Class identified with wrong identifier of type: " + type, node.identifier);
+//                        }
+//                    });
+//        }
+    }
+
+    private void root (RootNode node) {
+        scope = new RootScope(node, R);
+        R.set(node, "scope", scope);
+    }
+
+    private void popScope (ASTNode node) {
+        scope = scope.parent;
     }
 
     /**private void simpleType (SimpleTypeNode node)
