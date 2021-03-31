@@ -4,8 +4,8 @@ import norswap.autumn.positions.Span;
 
 public class AssignmentNode extends DeclarationNode {
     private ASTNode kind;
-    private ExpressionNode variable;
-    private ExpressionNode value;
+    public ExpressionNode variable;
+    public ExpressionNode value;
 
     public AssignmentNode(Span span, ExpressionNode variable, ExpressionNode value) {
         this(span, null, variable, value);

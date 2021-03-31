@@ -7,12 +7,10 @@ import java.util.List;
 public class FunctionStatementNode extends DeclarationNode {
     public IdentifierNode identifier;
     public FunctionArgumentsNode arguments;
-    public List statement;
+    public List<StatementNode> statement;
 
     public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments) {
-        super(span);
-        this.identifier = identifier;
-        this.arguments = arguments;
+        this(span, identifier, arguments, null);
     }
 
     public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments, List statement) {
@@ -54,7 +52,7 @@ public class FunctionStatementNode extends DeclarationNode {
 
     @Override
     public String name() {
-        return identifier.toString();
+        return identifier.getValue();
     }
 
     @Override

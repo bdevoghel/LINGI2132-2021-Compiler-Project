@@ -5,7 +5,7 @@ import norswap.autumn.positions.Span;
 import java.util.List;
 
 public class FunctionArgumentsNode extends ExpressionNode {
-    public List elements;
+    public List<ExpressionNode> elements;
 
     public FunctionArgumentsNode(Span span, List elements) {
         super(span);

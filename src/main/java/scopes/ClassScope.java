@@ -1,12 +1,12 @@
 package scopes;
 
-import AST.RootNode;
+import AST.ASTNode;
 import norswap.uranium.Reactor;
 import types.*;
 
 import static scopes.DeclarationKind.*;
 
-public final class RootScope extends Scope
+public final class ClassScope extends Scope
 {
     // ---------------------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ public final class RootScope extends Scope
 
     // ---------------------------------------------------------------------------------------------
 
-    public RootScope (RootNode node, Reactor reactor) {
+    public ClassScope(ASTNode node, Reactor reactor) {
         super(node, null);
 
         reactor.set(Bool,   "type",       TypeType.INSTANCE);

@@ -220,11 +220,11 @@ public final class KneghelGrammar extends Grammar {
             .push($ -> new FunctionStatementNode($.span(), $.$0(), $.$1()));
 
     public rule functionMainHeader = seq(_fun, _main,
-            OPENPARENT, word("args").as_val(new IdentifierNode(null, "args")), CLOSEPARENT) //TODO null for span
+            OPENPARENT, word("args").as_val(str("args")), CLOSEPARENT)
             .push($ -> new FunctionStatementNode(
                     $.span(),
                     new IdentifierNode($.span(), $.$0()),
-                    new FunctionArgumentsNode($.span(),Arrays.asList( (IdentifierNode)$.$1() ))));
+                    new FunctionArgumentsNode($.span(),Arrays.asList( new IdentifierNode($.span(), "args") ))));
 
     public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()));
