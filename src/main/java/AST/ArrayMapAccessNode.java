@@ -3,8 +3,8 @@ package AST;
 import norswap.autumn.positions.Span;
 
 public class ArrayMapAccessNode extends ExpressionNode {
-    private IdentifierNode arrayMap;
-    private ExpressionNode index;
+    public IdentifierNode arrayMap;
+    public ExpressionNode index;
 
     public ArrayMapAccessNode(Span span, IdentifierNode arrayMap, ExpressionNode index) {
         super(span);

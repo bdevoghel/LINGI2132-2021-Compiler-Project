@@ -65,7 +65,7 @@ public final class SemanticAnalysis {
         walker.register(UnaryExpressionNode.class,      PRE_VISIT, analysis::unaryExpression);
         walker.register(BinaryExpressionNode.class,     PRE_VISIT, analysis::binaryExpression);
 
-//        walker.register(ArrayMapAccessNode.class,     PRE_VISIT, analysis::??);
+        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
 //        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::??);
 //        walker.register(ClassStatementNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::??);
@@ -81,6 +81,15 @@ public final class SemanticAnalysis {
 
 
         return walker;
+    }
+
+    private static boolean isComparableTo (Type a, Type b) {
+        return a.isReference() && b.isReference()
+                || a.equals(b);
+    }
+
+    private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
+        return format("Trying to %s %s with %s", node.operator.name().toLowerCase(), left, right);
     }
 
     private void integer (IntegerNode node) {
@@ -104,11 +113,13 @@ public final class SemanticAnalysis {
 
         DeclarationContext maybeCtx = scope.lookup(node.getValue());
 
+        // Try to lookup immediately. This must succeed for variables, but not necessarily for functions or types.
         if (maybeCtx != null) {
             R.set(node, "decl", maybeCtx.declaration);
             R.set(node, "scope", maybeCtx.scope);
 
-            R.rule(node, "type").using(maybeCtx.declaration, "type")
+            R.rule(node, "type")
+                    .using(maybeCtx.declaration, "type")
                     .by(Rule::copyFirst);
             return;
         }
@@ -138,8 +149,7 @@ public final class SemanticAnalysis {
                 });
     }
 
-    private void binaryExpression (BinaryExpressionNode node)
-    {
+    private void binaryExpression (BinaryExpressionNode node) {
         R.rule(node, "type")
                 .using(node.leftChild.attr("type"), node.rightChild.attr("type"))
                 .by(r -> {
@@ -156,24 +166,24 @@ public final class SemanticAnalysis {
                 });
     }
 
-    //TODO accept double : do we accept operation between doubles and integers?
-    private void binaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right)
-    {
-        if (left instanceof IntType)
-            if (right instanceof IntType)
+    private void binaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right) {
+        if (left instanceof IntType) {
+            if (right instanceof IntType) {
                 r.set(0, IntType.INSTANCE);
-            else
+            } else if (!(right instanceof DoubleType)) {
                 r.error(arithmeticError(node, "Int", right), node);
-        else
+            } else
+                r.set(0, DoubleType.INSTANCE);
+        } else if (left instanceof DoubleType) {
+            if (right instanceof IntType || right instanceof DoubleType) {
+                r.set(0, DoubleType.INSTANCE);
+            } else
+                r.error(arithmeticError(node, "Int", right), node);
+        } else
             r.error(arithmeticError(node, left, right), node);
     }
 
-    private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
-        return format("Trying to %s %s with %s", node.operator.name().toLowerCase(), left, right);
-    }
-
-    private void binaryEquality (Rule r, BinaryExpressionNode node, Type left, Type right)
-    {
+    private void binaryEquality (Rule r, BinaryExpressionNode node, Type left, Type right) {
         r.set(0, BoolType.INSTANCE);
 
         if (!isComparableTo(left, right))
@@ -181,14 +191,7 @@ public final class SemanticAnalysis {
                     node);
     }
 
-    private static boolean isComparableTo (Type a, Type b)
-    {
-        return a.isReference() && b.isReference()
-                || a.equals(b);
-    }
-
-    private void binaryComparison (Rule r, BinaryExpressionNode node, Type left, Type right)
-    {
+    private void binaryComparison (Rule r, BinaryExpressionNode node, Type left, Type right) {
         r.set(0, BoolType.INSTANCE);
 
         if (!(left instanceof IntType) && !(left instanceof DoubleType))
@@ -200,7 +203,6 @@ public final class SemanticAnalysis {
     }
 
     private void unaryExpression(UnaryExpressionNode node) {
-
         if (node.operator == UnaryOperator.NEG) {
             if (node.operand instanceof IntegerNode){
                 R.set(node, "type", IntType.INSTANCE);
@@ -239,6 +241,26 @@ public final class SemanticAnalysis {
                 });
         }
 
+    }
+
+    private void arrayMapAccess(ArrayMapAccessNode node) {
+        R.rule()
+                .using(node.index, "type")
+                .by(r -> {
+                    Type type = r.get(0);
+                    if (!(type instanceof IntType))
+                        r.error("Indexing an array using a non-int-valued expression.", node.index);
+                });
+
+        R.rule(node, "type")
+                .using(node.arrayMap, "type")
+                .by(r -> {
+                    Type type = r.get(0);
+                    if (type instanceof ArrayType)
+                        r.set(0, ((ArrayType) type).componentType);
+                    else
+                        r.error("Trying to index a non-array expression of type " + type, node);
+                });
     }
 
     /**private void simpleType (SimpleTypeNode node)
