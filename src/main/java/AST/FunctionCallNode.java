@@ -3,8 +3,8 @@ package AST;
 import norswap.autumn.positions.Span;
 
 public class FunctionCallNode extends ExpressionNode {
-    private IdentifierNode function;
-    private FunctionArgumentsNode arguments;
+    public IdentifierNode function;
+    public FunctionArgumentsNode arguments;
 
     public FunctionCallNode(Span span, IdentifierNode function, FunctionArgumentsNode arguments) {
         super(span);

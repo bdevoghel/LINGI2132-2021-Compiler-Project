@@ -21,7 +21,7 @@ public final class ClassScope extends Scope
     // root scope types
     public final SyntheticDeclarationNode Bool   = decl("Bool",   TYPE);
     public final SyntheticDeclarationNode Int    = decl("Int",    TYPE);
-    public final SyntheticDeclarationNode Float  = decl("Float",  TYPE);
+    public final SyntheticDeclarationNode Doub  = decl("Doub",  TYPE);
     public final SyntheticDeclarationNode String = decl("String", TYPE);
     public final SyntheticDeclarationNode Void   = decl("Void",   TYPE);
     public final SyntheticDeclarationNode Type   = decl("Type",   TYPE);
@@ -41,7 +41,7 @@ public final class ClassScope extends Scope
 
         reactor.set(Bool,   "type",       TypeType.INSTANCE);
         reactor.set(Int,    "type",       TypeType.INSTANCE);
-        reactor.set(Float,  "type",       TypeType.INSTANCE);
+        reactor.set(Doub,   "type",       TypeType.INSTANCE);
         reactor.set(String, "type",       TypeType.INSTANCE);
         reactor.set(Void,   "type",       TypeType.INSTANCE);
         reactor.set(Type,   "type",       TypeType.INSTANCE);

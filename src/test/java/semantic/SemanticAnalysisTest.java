@@ -129,10 +129,12 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     @Test
     public void testClasses() {
         autumnFixture.rule = grammar.root;
+        successInput("class Foo { }");
         successInput("class Foo { fun bar() {} }");
         successInput("class Foo { fun bar() {a=1} }");
         successInput("class Foo { fun bar() {a=1 return a} fun fuzz(a) {return a} }");
-//        successInput("class Foo { \nfun bar() {\na = 1 +2\nreturn a\n} \nfun main(args) { \n_ = bar() \n} \n}");
+        successInput("class Foo { fun bar() {a = 1 + 2 return a} }");
+        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun main(args) {_ = bar()} }");
     }
 
     @Test
