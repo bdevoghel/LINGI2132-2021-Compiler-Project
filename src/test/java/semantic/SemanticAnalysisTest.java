@@ -86,6 +86,8 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         //successInput("-1 + 2");
         successInput("1 / 2+ 3");
         successInput("1 + 2 % 3");
+        successInput("1.0 + 2 % 3.0");
+//        successInput("\"a\" + 1"); // TODO to allow see TODO in arithmetic
         //failureInput("1 + a"); //TODO JE NE SAIS PAS COMMENT FAIRE DES FAILURES
     }
 
@@ -126,23 +128,16 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
 
     @Test
     public void testClasses() {
-        autumnFixture.rule = grammar.classStatement;
+        autumnFixture.rule = grammar.root;
         successInput("class Foo {}");
-        successInput("class Foo { fun bar() {return 1} }");
+        successInput("class Foo { fun bar() {return 1} fun main(args) { _ = bar() } }");
     }
 
     @Test
-    public void testFunctionArguments() {
-        autumnFixture.rule = grammar.functionArguments;
-        successInput("(a, 25, 30)");
-        successInput("()");
-        successInput("(b)");
-        successInput("(true)");
-        failureInput("true");
-        failureInput("a, b");
-        failureInput("");
-        failureInput("(a,b");
-        failureInput("a, 30)");
+    public void testFunctionStatement() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun bar() { a = 1 return a } }");
+        successInput("class Foo { fun bar() { a = 1 return a } }");
     }
 
     @Test

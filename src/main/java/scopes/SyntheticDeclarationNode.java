@@ -9,7 +9,7 @@ import java.util.Locale;
  * A {@code SyntheticDeclarationNode} is such a node for declarations that have not been
  * introduced by the user.
  *
- * <p>At present, all such declarations are unconditionally introduced in the {@link RootScope}.
+ * <p>At present, all such declarations are unconditionally introduced in the {@link ClassScope}.
  */
 public final class SyntheticDeclarationNode extends DeclarationNode
 {

@@ -13,12 +13,11 @@ import scopes.*;
 import types.*;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
 import static java.lang.String.format;
-import static norswap.utils.Vanilla.list;
 import static norswap.utils.Util.cast;
+import static norswap.utils.Vanilla.forEachIndexed;
+
 
 import static AST.BinaryOperator.*;
 import static norswap.utils.visitors.WalkVisitType.POST_VISIT;
@@ -65,15 +64,18 @@ public final class SemanticAnalysis {
         walker.register(UnaryExpressionNode.class,      PRE_VISIT, analysis::unaryExpression);
         walker.register(BinaryExpressionNode.class,     PRE_VISIT, analysis::binaryExpression);
 
-        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
-//        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::??);
-//        walker.register(ClassStatementNode.class,     PRE_VISIT, analysis::??);
+        walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
+        walker.register(FunctionStatementNode.class,    PRE_VISIT, analysis::functionStatement);
 //        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(FunctionCallNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(FunctionStatementNode.class,     PRE_VISIT, analysis::??);
+//        walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
+
+        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
+        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::assignment);
 //        walker.register(IfStatementNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(RootNode.class,     PRE_VISIT, analysis::??); // TODO needed ?
+
+        walker.register(ClassStatementNode.class,       POST_VISIT, analysis::popScope);
+        walker.register(FunctionStatementNode.class,    POST_VISIT, analysis::popScope);
 
         // Fallback rules
         walker.registerFallback(PRE_VISIT, node -> {});
@@ -90,6 +92,25 @@ public final class SemanticAnalysis {
 
     private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
         return format("Trying to %s %s with %s", node.operator.name().toLowerCase(), left, right);
+    }
+
+    /**
+     * Indicates whether a value of type {@code a} can be assigned to a location (variable,
+     * parameter, ...) of type {@code b}.
+     */
+    private static boolean isAssignableTo (Type a, Type b)
+    {
+//        if (a instanceof VoidType || b instanceof VoidType) // TODO to add ??
+//            return false;
+
+        if (a instanceof IntType && b instanceof DoubleType)
+            return true;
+
+        if (a instanceof ArrayType)
+            return b instanceof ArrayType
+                    && isAssignableTo(((ArrayType)a).componentType, ((ArrayType)b).componentType);
+
+        return a instanceof NullType && b.isReference() || a.equals(b);
     }
 
     private void integer (IntegerNode node) {
@@ -111,6 +132,7 @@ public final class SemanticAnalysis {
     private void identifier (IdentifierNode node) {
         final Scope scope = this.scope;
 
+        // TODO take context in scope into account
         DeclarationContext maybeCtx = scope.lookup(node.getValue());
 
         // Try to lookup immediately. This must succeed for variables, but not necessarily for functions or types.
@@ -150,6 +172,7 @@ public final class SemanticAnalysis {
     }
 
     private void binaryExpression (BinaryExpressionNode node) {
+    // TODO allow for fancy arithmetic with string etc
         R.rule(node, "type")
                 .using(node.leftChild.attr("type"), node.rightChild.attr("type"))
                 .by(r -> {
@@ -263,6 +286,91 @@ public final class SemanticAnalysis {
                 });
     }
 
+    private void assignment(AssignmentNode node) {
+        R.rule(node, "type")
+                .using(node.variable.attr("type"), node.value.attr("type"))
+                .by(r -> {
+                    Type var  = r.get(0);
+                    Type val = r.get(1);
+
+                    r.set(0, r.get(1)); // the type of the assignment is the right-side type
+
+                    if (node.variable instanceof IdentifierNode
+                            ||  node.variable instanceof ArrayMapAccessNode) {
+                        if (!isAssignableTo(var, val))
+                            r.errorFor("Trying to assign a value to a non-compatible lvalue.", node);
+                    }
+                    else
+                        r.errorFor("Trying to assign to an non-lvalue expression.", node.variable);
+                });
+    }
+
+    private void functionStatement(FunctionStatementNode node) {
+        scope.declare(node.identifier.getValue(), node);
+        scope = new Scope(node, scope);
+        R.set(node, "scope", scope);
+
+        Attribute[] dependencies = new Attribute[node.arguments.elements.size()];
+        forEachIndexed(node.arguments.elements, (i, param) ->
+                dependencies[i] = param.attr("type"));
+
+        R.rule(node, "type")
+                .using(dependencies)
+                .by(r -> {
+                    Type[] paramTypes = new Type[node.arguments.elements.size()];
+                    for (int i = 0; i < paramTypes.length; ++i)
+                        paramTypes[i] = r.get(i);
+                    r.set(0, new FunType(paramTypes));
+                });
+
+//        R.rule()
+//                .using(node.block.attr("returns"), node.returnType.attr("value"))
+//                .by(r -> {
+//                    boolean returns = r.get(0);
+//                    Type returnType = r.get(1);
+//                    if (!returns && !(returnType instanceof VoidType))
+//                        r.error("Missing return in function.", node);
+//                    // NOTE: The returned value presence & type is checked in returnStmt().
+//                });
+    }
+
+    private void classStatement(ClassStatementNode node) {
+        // Class is root of Kneghel
+        assert scope == null;
+        scope = new ClassScope(node, R);
+        scope.declare(node.identifier.getValue(), node);
+
+        scope.declare("args",
+//                new FunctionArgumentsNode(node.span, Arrays.asList(new StringNode(node.span, node.span.toString()))));
+                new AssignmentNode(node.span,
+                        new IdentifierNode(node.span, "args"),
+                        new StringNode(node.span, node.span.toString())));
+//        scope.declare("_",
+//                new AssignmentNode(node.span,
+//                        new IdentifierNode(node.span, "_"),
+//                        new StringNode(node.span, node.span.toString())));
+
+        R.set(node, "scope", scope);
+
+
+        Attribute[] dependencies = new Attribute[node.functions.size()];
+        forEachIndexed(node.functions, (i, fun) ->
+                dependencies[i] = fun.attr("type"));
+
+        R.rule(node, "type")
+                .using(dependencies)
+                .by(r -> {
+                    Type[] funTypes = new Type[node.functions.size()];
+                    for (int i = 0; i < funTypes.length; ++i)
+                        funTypes[i] = r.get(i);
+                    r.set(0, new ClassType(funTypes));
+                });
+    }
+
+    private void popScope (ASTNode node) {
+        scope = scope.parent;
+    }
+
     /**private void simpleType (SimpleTypeNode node)
     {
         final Scope scope = this.scope;
@@ -297,16 +405,6 @@ public final class SemanticAnalysis {
         if (!(decl instanceof SyntheticDeclarationNode)) return false;
         SyntheticDeclarationNode synthetic = cast(decl);
         return synthetic.kind() == DeclarationKind.TYPE;
-    }
-
-    private void popScope (ASTNode node) {
-        scope = scope.parent;
-    }
-
-    private void root (RootNode node) {
-        assert scope == null;
-        scope = new RootScope(node, R);
-        R.set(node, "scope", scope);
     }
 
     private void intLiteral (IntLiteralNode node) {

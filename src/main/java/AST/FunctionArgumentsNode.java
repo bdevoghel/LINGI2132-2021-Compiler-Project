@@ -5,11 +5,11 @@ import norswap.autumn.positions.Span;
 import java.util.List;
 
 public class FunctionArgumentsNode extends ExpressionNode {
-    private List arguments;
+    public List<ExpressionNode> elements;
 
-    public FunctionArgumentsNode(Span span, List arguments) {
+    public FunctionArgumentsNode(Span span, List elements) {
         super(span);
-        this.arguments = arguments;
+        this.elements = elements;
     }
 
     @Override
@@ -17,12 +17,12 @@ public class FunctionArgumentsNode extends ExpressionNode {
         if (getClass()  != obj.getClass())
             return false;
         FunctionArgumentsNode other = (FunctionArgumentsNode) obj;
-        return this.arguments.equals(other.arguments);
+        return this.elements.equals(other.elements);
     }
 
     @Override
     public String toString() {
-        return "FunctionArgumentsNode:" + arguments;
+        return "FunctionArgumentsNode:" + elements;
     }
 
     /**
