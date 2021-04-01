@@ -3,7 +3,7 @@ package AST;
 import norswap.autumn.positions.Span;
 
 public class IntegerNode extends ExpressionNode {
-    private int value;
+    public int value;
 
     public IntegerNode(Span span, int value) {
         super(span);

@@ -374,7 +374,12 @@ public final class SemanticAnalysis {
 
     private void functionArguments(FunctionArgumentsNode node) {
         for (ExpressionNode e: node.elements) {
-            scope.declare(((IdentifierNode) e).getValue(), node); // scope pushed by FunDeclarationNode
+            if (e instanceof IdentifierNode) {
+                scope.declare(((IdentifierNode) e).getValue(), node); // scope pushed by FunDeclarationNode
+            }
+            else if (e instanceof IntegerNode) {
+                scope.declare(String.valueOf(((IntegerNode) e).value), node); // scope pushed by FunDeclarationNode
+            }
             R.rule(node, "type")
                     .using(e, "type")
                     .by(Rule::copyFirst);
@@ -404,6 +409,11 @@ public final class SemanticAnalysis {
         // Class is root of Kneghel
         assert scope == null;
         scope = new ClassScope(node, R);
+        scope.declare("int", node);
+        scope.declare("print", node);
+        scope.declare("makeArray", node);
+        scope.declare("len", node);
+        scope.declare("makeDict", node);
         scope.declare(node.identifier.getValue(), node);
 
         scope.declare("args",
@@ -431,128 +441,5 @@ public final class SemanticAnalysis {
     private void popScope (ASTNode node) {
         scope = scope.parent;
     }
-
-    /**private void simpleType (SimpleTypeNode node)
-    {
-        final Scope scope = this.scope;
-
-        R.rule()
-                .by(r -> {
-                    // type declarations may occur after use
-                    DeclarationContext ctx = scope.lookup(node.name);
-                    DeclarationNode decl = ctx == null ? null : ctx.declaration;
-
-                    if (ctx == null)
-                        r.errorFor("could not resolve: " + node.name,
-                                node,
-                                node.attr("value"));
-
-                    else if (!isTypeDecl(decl))
-                        r.errorFor(format(
-                                "%s did not resolve to a type declaration but to a %s declaration",
-                                node.name, decl.declaredThing()),
-                                node,
-                                node.attr("value"));
-
-                    else
-                        R.rule(node, "value")
-                                .using(decl, "declared")
-                                .by(Rule::copyFirst);
-                });
-    }
-    private static boolean isTypeDecl (DeclarationNode decl)
-    {
-        //if (decl instanceof StructDeclarationNode) return true;
-        if (!(decl instanceof SyntheticDeclarationNode)) return false;
-        SyntheticDeclarationNode synthetic = cast(decl);
-        return synthetic.kind() == DeclarationKind.TYPE;
-    }
-
-    private void intLiteral (IntLiteralNode node) {
-        R.set(node, "type", IntType.INSTANCE);
-    }
-
-    private void parenthesized (ParenthesizedNode node)
-    {
-        R.rule(node, "type")
-                .using(node.expression, "type")
-                .by(Rule::copyFirst);
-    }
-
-    private void binaryExpression (BinaryExpressionNode node)
-    {
-        R.rule(node, "type")
-                .using(node.left.attr("type"), node.right.attr("type"))
-                .by(r -> {
-                    Type left  = r.get(0);
-                    Type right = r.get(1);
-
-                    if (node.operator == ADD){
-                        binaryArithmetic(r, node, left, right);}
-                    else if (node.operator == EQUALITY){
-                        binaryEquality(r, node, left, right);}
-                });
-    }
-
-    private void binaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right)
-    {
-        if (left instanceof IntType)
-            if (right instanceof IntType)
-                r.set(0, IntType.INSTANCE);
-            else
-                r.error(arithmeticError(node, "Int", right), node);
-        else
-            r.error(arithmeticError(node, left, right), node);
-    }
-
-    private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
-        return format("Trying to %s %s with %s", node.operator.name().toLowerCase(), left, right);
-    }
-
-    private void binaryEquality (Rule r, BinaryExpressionNode node, Type left, Type right)
-    {
-        r.set(0, BoolType.INSTANCE);
-
-        if (!isComparableTo(left, right))
-            r.errorFor(format("Trying to compare incomparable types %s and %s", left, right),
-                    node);
-    }
-
-    private static boolean isComparableTo (Type a, Type b)
-    {
-        return a.isReference() && b.isReference()
-                || a.equals(b);
-    }
-
-    private void ifStmt (IfNode node) {
-        R.rule()
-                .using(node.condition, "type")
-                .by(r -> {
-                    Type type = r.get(0);
-                    if (!(type instanceof BoolType)) {
-                        r.error("If statement with a non-boolean condition of type: " + type,
-                                node.condition);
-                    }
-                });
-
-        Attribute[] deps = getReturnsDependencies(list(node.trueStatement, node.falseStatement));
-        R.rule(node, "returns")
-                .using(deps)
-                .by(r -> r.set(0, deps.length == 2 && Arrays.stream(deps).allMatch(r::get)));
-    }
-
-    private boolean isReturnContainer (SighNode node) {
-        return node instanceof IfNode;
-    }
-
-     Get the depedencies necessary to compute the "returns" attribute of the parent.
-    private Attribute[] getReturnsDependencies (List<? extends SighNode> children) {
-        return children.stream()
-                .filter(Objects::nonNull)
-                .filter(this::isReturnContainer)
-                .map(it -> it.attr("returns"))
-                .toArray(Attribute[]::new);
-    }
-    **/
 
 }
