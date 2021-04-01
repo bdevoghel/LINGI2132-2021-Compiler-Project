@@ -127,14 +127,35 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     }
 
     @Test
+    public void testIfStatement() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun bar() {if true {a = 1+2}} }");
+        successInput("class Foo { fun bar(a) {if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }} }");
+        successInput("class Foo { fun bar(a) {if 1 == 2 { _ = print(a) } }}");
+        successInput("class Foo { fun bar() {if true { a=2 } else { a=3 }} }");
+    }
+
+    @Test
+    public void testWhileStatement() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun bar() {while 1 > 2 { a = b } }}");
+        successInput("class Foo { fun bar(b) {while true { a = b + 1 }} }");
+        successInput("class Foo { fun bar(a, b) {while a == b { if c == 1 {b = 2}} }}");
+        successInput("class Foo { fun bar() {while true { a = foo(a, b)}} }");
+
+    }
+
+    @Test
     public void testClasses() {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { }");
         successInput("class Foo { fun bar() {} }");
         successInput("class Foo { fun bar() {a=1} }");
+        successInput("class Foo { fun bar(a) {a[0]=1} }");
         successInput("class Foo { fun bar() {a=1 return a} fun fuzz(a) {return a} }");
         successInput("class Foo { fun bar() {a = 1 + 2 return a} }");
-        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun main(args) {_ = bar()} }");
+        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_ = bar() _= fuzz(a)} }");
+        failureInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_ = bar(b) _= fuzz(a)} }");
     }
 
     @Test

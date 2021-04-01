@@ -67,16 +67,19 @@ public final class SemanticAnalysis {
 
         walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
         walker.register(FunctionStatementNode.class,    PRE_VISIT, analysis::functionStatement);
-        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::functionArguments);
+        walker.register(FunctionArgumentsNode.class,    PRE_VISIT, analysis::functionArguments);
         walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
 
-//        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
-        walker.register(AssignmentNode.class,         PRE_VISIT, analysis::assignment);
-//        walker.register(IfStatementNode.class,     PRE_VISIT, analysis::??);
-//        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??);
+        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
+        walker.register(AssignmentNode.class,           PRE_VISIT, analysis::assignment);
+        walker.register(IfStatementNode.class,          PRE_VISIT, analysis::ifStatement);
+        walker.register(WhileStatementNode.class,       PRE_VISIT, analysis::whileStatement);
+//        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??); //TODO do we actually need it?
 
         walker.register(ClassStatementNode.class,       POST_VISIT, analysis::popScope);
         walker.register(FunctionStatementNode.class,    POST_VISIT, analysis::popScope);
+        walker.register(IfStatementNode.class,          POST_VISIT, analysis::popScope);
+        walker.register(WhileStatementNode.class,       POST_VISIT, analysis::popScope);
 
         // Fallback rules
         walker.registerFallback(PRE_VISIT, node -> {});
@@ -320,6 +323,36 @@ public final class SemanticAnalysis {
                 });
     }
 
+    private void ifStatement(IfStatementNode node) {
+        scope = new Scope(node, scope);
+        R.set(node, "scope", scope);
+
+        R.rule()
+                .using(node.condition, "type")
+                .by(r -> {
+                    Type type = r.get(0);
+                    if (!(type instanceof BoolType)) {
+                        r.error("If statement with a non-boolean condition of type: " + type,
+                                node.condition);
+                    }
+                });
+    }
+
+    private void whileStatement(WhileStatementNode node) {
+        scope = new Scope(node, scope);
+        R.set(node, "scope", scope);
+
+        R.rule()
+                .using(node.condition, "type")
+                .by(r -> {
+                    Type type = r.get(0);
+                    if (!(type instanceof BoolType)) {
+                        r.error("While statement with a non-boolean condition of type: " + type,
+                                node.condition);
+                    }
+                });
+    }
+
     private void functionStatement(FunctionStatementNode node) {
         scope.declare(node.identifier.getValue(), node);
         scope = new Scope(node, scope);
@@ -349,42 +382,21 @@ public final class SemanticAnalysis {
     }
 
     private void functionCall(FunctionCallNode node) {
-        this.inferenceContext = node;
-        Attribute[] dependencies = new Attribute[node.arguments.elements.size() + 1];
-        dependencies[0] = node.function.attr("type");
-        forEachIndexed(node.arguments.elements, (i, arg) -> {
-            dependencies[i + 1] = arg.attr("type");
-            R.set(arg, "index", i);
-        });
+        final Scope scope = this.scope;
 
         R.rule(node, "type")
-                .using(dependencies)
+                .using(node.function.attr("type"))
                 .by(r -> {
-                    Type maybeFunType = r.get(0);
-                    if (!(maybeFunType instanceof FunType)) {
-                        r.error("trying to call a non-function expression: " + node.function, node.function);
-                        return;
-                    }
+                    r.set(0, "type");
 
-                    FunType funType = cast(maybeFunType);
-                    //r.set(0, funType.returnType);
-                    Type[] params = funType.paramTypes;
+                    DeclarationContext maybeCtx = scope.lookup(node.function.getValue());
+
+                    List<ExpressionNode> params = ((FunctionStatementNode) maybeCtx.declaration).arguments.elements;
                     List<ExpressionNode> args = node.arguments.elements;
-                    if (params.length != args.size())
-                        r.errorFor(format("wrong number of arguments, expected %d but got %d",
-                                params.length, args.size()),
-                                node);
 
-                    int checkedArgs = Math.min(params.length, args.size());
-                    for (int i = 0; i < checkedArgs; ++i) {
-                        Type argType = r.get(i);
-                        Type paramType = funType.paramTypes[i];
-                        if (!isAssignableTo(argType, paramType))
-                            r.errorFor(format(
-                                    "incompatible argument provided for argument %d: expected %s but got %s",
-                                    i, paramType, argType),
-                                    node.arguments.elements.get(i));
-                    }
+                    if (params.size() != args.size())
+                        r.errorFor("Wrong number of arguments, expected "+params.size()+" but got "+args.size(),
+                                node);
                 });
     }
 

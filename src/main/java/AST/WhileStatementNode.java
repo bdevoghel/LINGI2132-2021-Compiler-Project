@@ -5,8 +5,8 @@ import norswap.autumn.positions.Span;
 import java.util.List;
 
 public class WhileStatementNode extends StatementNode {
-    private ExpressionNode condition;
-    private List statements;
+    public ExpressionNode condition;
+    public List statements;
 
     public WhileStatementNode(Span span, ExpressionNode condition, List statements) {
         super(span);

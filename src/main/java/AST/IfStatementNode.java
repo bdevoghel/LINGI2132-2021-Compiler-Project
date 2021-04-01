@@ -5,9 +5,9 @@ import norswap.autumn.positions.Span;
 import java.util.List;
 
 public class IfStatementNode extends StatementNode {
-    private ExpressionNode condition;
-    private List trueStatements;
-    private List falseStatements;
+    public ExpressionNode condition;
+    public List trueStatements;
+    public List falseStatements;
 
     public IfStatementNode(Span span, ExpressionNode condition, List trueStatements) {
         this(span, condition, trueStatements, null);
