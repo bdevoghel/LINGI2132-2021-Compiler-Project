@@ -8,7 +8,6 @@ public abstract class ExpressionNode extends ASTNode {
         super(span);
     }
 
-
     @Override
     public boolean equals(Object obj){
         if (getClass()  != obj.getClass())

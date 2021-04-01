@@ -66,7 +66,7 @@ public final class SemanticAnalysis {
 
         walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
         walker.register(FunctionStatementNode.class,    PRE_VISIT, analysis::functionStatement);
-//        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::??);
+        walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::functionArguments);
 //        walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
 
         walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
@@ -287,6 +287,16 @@ public final class SemanticAnalysis {
     }
 
     private void assignment(AssignmentNode node) {
+        if (node.variable instanceof IdentifierNode) {
+            DeclarationContext maybeCtx = scope.lookup(((IdentifierNode) node.variable).getValue());
+
+            if (maybeCtx == null) {
+                this.inferenceContext = node;
+                scope.declare(((IdentifierNode) node.variable).getValue(), node);
+                R.set(node, "scope", scope);
+            }
+        }
+
         R.rule(node, "type")
                 .using(node.variable.attr("type"), node.value.attr("type"))
                 .by(r -> {
@@ -334,6 +344,16 @@ public final class SemanticAnalysis {
 //                });
     }
 
+    private void functionArguments(FunctionArgumentsNode node) {
+        for (ExpressionNode e: node.elements) {
+// TODO
+//            scope.declare(e.toString(), e); // scope pushed by FunDeclarationNode
+//            R.rule(node, "type")
+//                    .using(e.type, "value")
+//                    .by(Rule::copyFirst);
+        }
+    }
+
     private void classStatement(ClassStatementNode node) {
         // Class is root of Kneghel
         assert scope == null;
@@ -345,10 +365,6 @@ public final class SemanticAnalysis {
                 new AssignmentNode(node.span,
                         new IdentifierNode(node.span, "args"),
                         new StringNode(node.span, node.span.toString())));
-//        scope.declare("_",
-//                new AssignmentNode(node.span,
-//                        new IdentifierNode(node.span, "_"),
-//                        new StringNode(node.span, node.span.toString())));
 
         R.set(node, "scope", scope);
 
@@ -409,50 +425,6 @@ public final class SemanticAnalysis {
 
     private void intLiteral (IntLiteralNode node) {
         R.set(node, "type", IntType.INSTANCE);
-    }
-
-    private void reference (ReferenceNode node)
-    {
-        final Scope scope = this.scope;
-
-        // Try to lookup immediately. This must succeed for variables, but not necessarily for
-        // functions or types. By looking up now, we can report looked up variables later
-        // as being used before being defined.
-        DeclarationContext maybeCtx = scope.lookup(node.name);
-
-        if (maybeCtx != null) {
-            R.set(node, "decl",  maybeCtx.declaration);
-            R.set(node, "scope", maybeCtx.scope);
-
-            R.rule(node, "type")
-                    .using(maybeCtx.declaration, "type")
-                    .by(Rule::copyFirst);
-            return;
-        }
-
-        // Re-lookup after the scopes have been built.
-        R.rule(node.attr("decl"), node.attr("scope"))
-                .by(r -> {
-                    DeclarationContext ctx = scope.lookup(node.name);
-                    DeclarationNode decl = ctx == null ? null : ctx.declaration;
-
-                    if (ctx == null) {
-                        r.errorFor("Could not resolve: " + node.name,
-                                node, node.attr("decl"), node.attr("scope"), node.attr("type"));
-                    }
-                    else {
-                        r.set(node, "scope", ctx.scope);
-                        r.set(node, "decl", decl);
-
-                        if (decl instanceof VarDeclarationNode)
-                            r.errorFor("Variable used before declaration: " + node.name,
-                                    node, node.attr("type"));
-                        else
-                            R.rule(node, "type")
-                                    .using(decl, "type")
-                                    .by(Rule::copyFirst);
-                    }
-                });
     }
 
     private void parenthesized (ParenthesizedNode node)
