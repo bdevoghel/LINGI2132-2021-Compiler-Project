@@ -13,6 +13,7 @@ import scopes.*;
 import types.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static java.lang.String.format;
 import static norswap.utils.Util.cast;
@@ -67,9 +68,9 @@ public final class SemanticAnalysis {
         walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
         walker.register(FunctionStatementNode.class,    PRE_VISIT, analysis::functionStatement);
         walker.register(FunctionArgumentsNode.class,     PRE_VISIT, analysis::functionArguments);
-//        walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
+        walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
 
-        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
+//        walker.register(ArrayMapAccessNode.class,       PRE_VISIT, analysis::arrayMapAccess);
         walker.register(AssignmentNode.class,         PRE_VISIT, analysis::assignment);
 //        walker.register(IfStatementNode.class,     PRE_VISIT, analysis::??);
 //        walker.register(ReturnStatementNode.class,     PRE_VISIT, analysis::??);
@@ -291,9 +292,13 @@ public final class SemanticAnalysis {
             DeclarationContext maybeCtx = scope.lookup(((IdentifierNode) node.variable).getValue());
 
             if (maybeCtx == null) {
-                this.inferenceContext = node;
                 scope.declare(((IdentifierNode) node.variable).getValue(), node);
                 R.set(node, "scope", scope);
+
+                R.rule(node, "type")
+                        .using(node.value.attr("type"))
+                        .by(Rule::copyFirst);
+                return;
             }
         }
 
@@ -327,31 +332,60 @@ public final class SemanticAnalysis {
         R.rule(node, "type")
                 .using(dependencies)
                 .by(r -> {
-                    Type[] paramTypes = new Type[node.arguments.elements.size()];
+                    Type[] paramTypes = new Type[dependencies.length];
                     for (int i = 0; i < paramTypes.length; ++i)
                         paramTypes[i] = r.get(i);
                     r.set(0, new FunType(paramTypes));
                 });
-
-//        R.rule()
-//                .using(node.block.attr("returns"), node.returnType.attr("value"))
-//                .by(r -> {
-//                    boolean returns = r.get(0);
-//                    Type returnType = r.get(1);
-//                    if (!returns && !(returnType instanceof VoidType))
-//                        r.error("Missing return in function.", node);
-//                    // NOTE: The returned value presence & type is checked in returnStmt().
-//                });
     }
 
     private void functionArguments(FunctionArgumentsNode node) {
         for (ExpressionNode e: node.elements) {
-// TODO
-//            scope.declare(e.toString(), e); // scope pushed by FunDeclarationNode
-//            R.rule(node, "type")
-//                    .using(e.type, "value")
-//                    .by(Rule::copyFirst);
+            scope.declare(((IdentifierNode) e).getValue(), node); // scope pushed by FunDeclarationNode
+            R.rule(node, "type")
+                    .using(e, "type")
+                    .by(Rule::copyFirst);
         }
+    }
+
+    private void functionCall(FunctionCallNode node) {
+        this.inferenceContext = node;
+        Attribute[] dependencies = new Attribute[node.arguments.elements.size() + 1];
+        dependencies[0] = node.function.attr("type");
+        forEachIndexed(node.arguments.elements, (i, arg) -> {
+            dependencies[i + 1] = arg.attr("type");
+            R.set(arg, "index", i);
+        });
+
+        R.rule(node, "type")
+                .using(dependencies)
+                .by(r -> {
+                    Type maybeFunType = r.get(0);
+                    if (!(maybeFunType instanceof FunType)) {
+                        r.error("trying to call a non-function expression: " + node.function, node.function);
+                        return;
+                    }
+
+                    FunType funType = cast(maybeFunType);
+                    //r.set(0, funType.returnType);
+                    Type[] params = funType.paramTypes;
+                    List<ExpressionNode> args = node.arguments.elements;
+                    if (params.length != args.size())
+                        r.errorFor(format("wrong number of arguments, expected %d but got %d",
+                                params.length, args.size()),
+                                node);
+
+                    int checkedArgs = Math.min(params.length, args.size());
+                    for (int i = 0; i < checkedArgs; ++i) {
+                        Type argType = r.get(i);
+                        Type paramType = funType.paramTypes[i];
+                        if (!isAssignableTo(argType, paramType))
+                            r.errorFor(format(
+                                    "incompatible argument provided for argument %d: expected %s but got %s",
+                                    i, paramType, argType),
+                                    node.arguments.elements.get(i));
+                    }
+                });
     }
 
     private void classStatement(ClassStatementNode node) {
@@ -361,7 +395,6 @@ public final class SemanticAnalysis {
         scope.declare(node.identifier.getValue(), node);
 
         scope.declare("args",
-//                new FunctionArgumentsNode(node.span, Arrays.asList(new StringNode(node.span, node.span.toString()))));
                 new AssignmentNode(node.span,
                         new IdentifierNode(node.span, "args"),
                         new StringNode(node.span, node.span.toString())));

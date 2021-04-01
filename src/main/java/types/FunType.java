@@ -13,7 +13,7 @@ public final class FunType extends Type
 
     @Override public String name() {
         String[] params = NArrays.map(paramTypes, new String[0], Type::name);
-        return String.format("(%s) -> %s", String.join(",", params));
+        return params.length > 0 ? String.format("(%s) -> %s", String.join(",", params)) : "EmptyFunType";
     }
 
     @Override public boolean equals (Object o) {

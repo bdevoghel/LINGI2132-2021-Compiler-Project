@@ -4,7 +4,7 @@ import norswap.autumn.positions.Span;
 
 import java.util.List;
 
-public class FunctionArgumentsNode extends ExpressionNode {
+public class FunctionArgumentsNode extends DeclarationNode {
     public List<ExpressionNode> elements;
 
     public FunctionArgumentsNode(Span span, List elements) {
@@ -32,5 +32,15 @@ public class FunctionArgumentsNode extends ExpressionNode {
     @Override
     public String contents() {
         return this.toString();
+    }
+
+    @Override
+    public String name() {
+        return this.toString();
+    }
+
+    @Override
+    public String declaredThing() {
+        return null;
     }
 }

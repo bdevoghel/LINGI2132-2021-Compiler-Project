@@ -7,21 +7,21 @@ import java.util.List;
 public class FunctionStatementNode extends DeclarationNode {
     public IdentifierNode identifier;
     public FunctionArgumentsNode arguments;
-    public List<StatementNode> statement;
+    public List<StatementNode> statements;
 
     public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments) {
         this(span, identifier, arguments, null);
     }
 
-    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments, List statement) {
+    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments, List<StatementNode> statements) {
         super(span);
         this.identifier = identifier;
         this.arguments = arguments;
-        this.statement = statement;
+        this.statements = statements;
     }
 
-    public FunctionStatementNode setStatement(List statement) {
-        this.statement = statement;
+    public FunctionStatementNode setStatements(List<StatementNode> statements) {
+        this.statements = statements;
         return this;
     }
 
@@ -33,12 +33,12 @@ public class FunctionStatementNode extends DeclarationNode {
         return
                 this.identifier.equals(other.identifier) &&
                 this.arguments.equals(other.arguments) &&
-                (this.statement == null && other.statement == null || this.statement.equals(other.statement));
+                (this.statements == null && other.statements == null || this.statements.equals(other.statements));
     }
 
     @Override
     public String toString() {
-        return "FunctionStatementNode:[" + identifier + "(" + arguments + "){" + statement + "}"+"]";
+        return "FunctionStatementNode:[" + identifier + "(" + arguments + "){" + statements + "}"+"]";
     }
 
     /**

@@ -5,12 +5,8 @@
 package parser;
 
 import AST.*;
-import norswap.autumn.Autumn;
 import norswap.autumn.Grammar;
-import norswap.autumn.ParseOptions;
-import norswap.autumn.ParseResult;
 import norswap.autumn.actions.StackPush;
-import norswap.autumn.positions.LineMapString;
 
 import java.util.Arrays;
 
@@ -227,7 +223,7 @@ public final class KneghelGrammar extends Grammar {
                     new FunctionArgumentsNode($.span(),Arrays.asList( new IdentifierNode($.span(), "args") ))));
 
     public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
-            .push($ -> ((FunctionStatementNode) $.$0()).setStatement($.$1()));
+            .push($ -> ((FunctionStatementNode) $.$0()).setStatements($.$1()));
 
     public rule functionCallExpression = seq(identifier, functionArguments)
             .push($ -> new FunctionCallNode($.span(),$.$0(), $.$1()));
