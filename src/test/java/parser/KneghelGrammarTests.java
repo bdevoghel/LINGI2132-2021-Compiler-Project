@@ -421,6 +421,11 @@ public class KneghelGrammarTests extends AutumnTestFixture {
                         null,
                         new IdentifierNode(null,"foo"),
                         new FunctionArgumentsNode(null,Arrays.asList(new IdentifierNode(null,"a"), new IdentifierNode(null,"b")))));
+        successExpect("foo(1, b)",
+                new FunctionCallNode(
+                        null,
+                        new IdentifierNode(null,"foo"),
+                        new FunctionArgumentsNode(null,Arrays.asList(new IntegerNode(null,1), new IdentifierNode(null,"b")))));
         successExpect("foo(b)",
                 new FunctionCallNode(
                         null,

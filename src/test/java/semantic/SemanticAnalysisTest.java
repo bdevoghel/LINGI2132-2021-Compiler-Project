@@ -159,8 +159,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
                 "    }\n" +
                 "\n" +
                 "    fun main(args) {\n" +
-                "        N = int(args[0])\n" + //TODO args[0] not identifier bc it is arraymapaccessnode maybe make arraymapaccessnode extend identifier ?
-                //"        N = int(args)\n" +
+                "        N = int(args[0])\n" +
                 "        current = 2\n" +
                 "        count = 0\n" +
                 "        while count < N {\n" +
@@ -214,12 +213,11 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
                 "    }\n" +
                 "\n" +
                 "    fun main(args) {\n" +
-                "        N = int(args[0])\n" + //TODO same problem as above
-               // "        N = int(args)\n" +
-                //"        _ = fibonacci(0, 1, N)\n" + //TODO integer is not identifier ....
-                "        zero = 0 \n" +
-                "        one = 1 \n" +
-                "        _ = fibonacci(zero, one, N)\n" +
+                "        N = int(args[0])\n" +
+                "        _ = fibonacci(0, 1, N)\n" + //TODO integer is not identifier ....
+//                "        zero = 0 \n" +
+//                "        one = 1 \n" +
+//                "        _ = fibonacci(zero, one, N)\n" +
                 "        return 0\n" +
                 "    }\n" +
                 "}");
