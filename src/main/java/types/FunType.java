@@ -13,7 +13,9 @@ public final class FunType extends Type
 
     @Override public String name() {
         String[] params = NArrays.map(paramTypes, new String[0], Type::name);
-        return params.length > 0 ? String.format("(%s) -> %s", String.join(",", params)) : "EmptyFunType";
+        return params.length > 0
+                ? String.format("%s{%s}", "FunType", String.join(",", params))
+                : "EmptyFunType";
     }
 
     @Override public boolean equals (Object o) {
@@ -26,5 +28,12 @@ public final class FunType extends Type
 
     @Override public int hashCode () {
         return Arrays.hashCode(paramTypes);
+    }
+
+    @Override
+    public String toString() {
+        return "FunType{" +
+                "paramTypes=" + Arrays.toString(paramTypes) +
+                '}';
     }
 }

@@ -6,14 +6,14 @@ import java.util.List;
 
 public class FunctionStatementNode extends DeclarationNode {
     public IdentifierNode identifier;
-    public FunctionArgumentsNode arguments;
+    public List<FunctionParameterNode> arguments;
     public List<StatementNode> statements;
 
-    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments) {
+    public FunctionStatementNode(Span span, IdentifierNode identifier, List<FunctionParameterNode> arguments) {
         this(span, identifier, arguments, null);
     }
 
-    public FunctionStatementNode(Span span, IdentifierNode identifier, FunctionArgumentsNode arguments, List<StatementNode> statements) {
+    public FunctionStatementNode(Span span, IdentifierNode identifier, List<FunctionParameterNode> arguments, List<StatementNode> statements) {
         super(span);
         this.identifier = identifier;
         this.arguments = arguments;

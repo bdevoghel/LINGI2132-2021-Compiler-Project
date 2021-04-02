@@ -1,4 +1,4 @@
-package parser;
+package grammar;
 
 import AST.*;
 import org.testng.annotations.Test;
@@ -11,11 +11,11 @@ import static AST.UnaryOperator.*;
 
 public class KneghelGrammarTests extends AutumnTestFixture {
 
-    KneghelGrammar parser = new KneghelGrammar();
+    KneghelGrammar grammar = new KneghelGrammar();
 
     @Test
     public void testInteger() {
-        this.rule = parser.integer;
+        this.rule = grammar.integer;
         success("1");
         success("1234");
         failure("a");
@@ -29,7 +29,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testDouble() {
-        this.rule = parser.doub;
+        this.rule = grammar.doub;
         success("1.0");
         success("1234.1234");
         successExpect("5.", new DoubleNode(null, 5.0));
@@ -54,7 +54,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testStrings() {
-        this.rule = parser.string;
+        this.rule = grammar.string;
         successExpect("\"abc\"", new StringNode(null,"abc"));
         successExpect("\" a b c \"", new StringNode(null," a b c "));
         successExpect("\"\"", new StringNode(null,""));
@@ -65,7 +65,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testBooleans() {
-        this.rule = parser.bool;
+        this.rule = grammar.bool;
         success("true");
         success("false");
         failure("True");
@@ -78,7 +78,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testValues() {
-        this.rule = parser.prefixExpression;
+        this.rule = grammar.prefixExpression;
         success("1");
         success("-1");
         success("1.0");
@@ -91,13 +91,13 @@ public class KneghelGrammarTests extends AutumnTestFixture {
         success("!true");
         successExpect("! true", new UnaryExpressionNode(null,NOT, new BooleanNode(null,true)));
         success("\"a\"");
-//        failure("- \"a\""); // TODO make this fail
-//        failure("! \"a\"");
+        success("- \"a\""); // to be dealt with in semantics
+        success("! \"a\""); // to be dealt with in semantics
     }
 
     @Test
     public void testComment() {
-        this.rule = parser.ws;
+        this.rule = grammar.ws;
         success("// comment");
         success("//comment");
         success("//");
@@ -118,7 +118,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testSimpleVarDef(){
-        this.rule = parser.variableDefinition;
+        this.rule = grammar.variableDefinition;
         success("a = 1");
         success("a = true");
         success("a = b");
@@ -136,7 +136,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testSimpleAddition() {
-        this.rule = parser.additionExpression;
+        this.rule = grammar.additionExpression;
         success("1+2");
         success("1 + 2");
         success("-1 + 2");
@@ -153,7 +153,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testSimpleMultiplication() {
-        this.rule = parser.multiplicationExpression;
+        this.rule = grammar.multiplicationExpression;
         success("1*2");
         success("1 * 2");
         success("-1 * 2");
@@ -172,7 +172,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testSimpleMixedOperations() {
-        this.rule = parser.additionExpression;
+        this.rule = grammar.additionExpression;
         success("1 + 2 + 3 - 4");
         success("1 + 2 * 3 / 4 + 5");
         success("1 - 2 + 3");
@@ -211,7 +211,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testAdvancedVarDef() {
-        this.rule = parser.variableDefinition;
+        this.rule = grammar.variableDefinition;
 //        failure("a = true * 5 + \"coucou\"");
         successExpect("a = null", new AssignmentNode(null,new IdentifierNode(null,"a"), null));
         successExpect("a = 1 + 2 * 3", new AssignmentNode(null,new IdentifierNode(null,"a"), new BinaryExpressionNode(null,new IntegerNode(null,1), ADD, new BinaryExpressionNode(null,new IntegerNode(null,2), MULTIPLY, new IntegerNode(null,3)))));
@@ -221,7 +221,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testExpression() {
-        this.rule = parser.expression;
+        this.rule = grammar.expression;
         success("1");
         success("a");
         success("true");
@@ -280,7 +280,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testConditions() {
-        this.rule = parser.ifStatement;
+        this.rule = grammar.ifStatement;
         successExpect("if 1 == 2 { a=3 }",
                 new IfStatementNode(
                         null,
@@ -332,7 +332,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testWhileLoops() {
-        this.rule = parser.whileStatement;
+        this.rule = grammar.whileStatement;
         successExpect("while 1 > 2 { a = b }",
                 new WhileStatementNode(
                         null,
@@ -374,24 +374,26 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testFunctions() {
-        this.rule = parser.functionStatement;
+        this.rule = grammar.functionStatement;
         successExpect("fun bar() { a = 1 return a }",
                 new FunctionStatementNode(
                         null,
                         new IdentifierNode(null,"bar"),
-                        new FunctionArgumentsNode(null,Arrays.asList()),
+                        Arrays.asList(),
                         Arrays.asList(new AssignmentNode(null,new IdentifierNode(null,"a"), new IntegerNode(null,1)), new ReturnStatementNode(null,new IdentifierNode(null,"a")))));
         successExpect("fun bar() { return 1 }",
                 new FunctionStatementNode(
                         null,
                         new IdentifierNode(null,"bar"),
-                        new FunctionArgumentsNode(null,Arrays.asList()),
+                        Arrays.asList(),
                         Arrays.asList(new ReturnStatementNode(null,new IntegerNode(null,1)))));
         successExpect("fun foo(a, b) { c = a + b \n d = c * c \n return d }",
                 new FunctionStatementNode(
                         null,
                         new IdentifierNode(null,"foo"),
-                        new FunctionArgumentsNode(null,Arrays.asList(new IdentifierNode(null,"a"), new IdentifierNode(null,"b"))),
+                        Arrays.asList(
+                                new FunctionParameterNode(null, new IdentifierNode(null,"a")),
+                                new FunctionParameterNode(null, new IdentifierNode(null,"b")) ),
                         Arrays.asList(
                                 new AssignmentNode(null,new IdentifierNode(null,"c"), new BinaryExpressionNode(null,new IdentifierNode(null,"a"), ADD, new IdentifierNode(null,"b"))),
                                 new AssignmentNode(null,new IdentifierNode(null,"d"), new BinaryExpressionNode(null,new IdentifierNode(null,"c"), MULTIPLY, new IdentifierNode(null,"c"))),
@@ -400,7 +402,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testArrayMapAccess() {
-        this.rule = parser.arrayMapAccessExpression;
+        this.rule = grammar.arrayMapAccessExpression;
         successExpect("a[i]", new ArrayMapAccessNode(null,new IdentifierNode(null,"a"), new IdentifierNode(null,"i")));
         successExpect("a[0]", new ArrayMapAccessNode(
                 null,
@@ -415,7 +417,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testFunctionCalls() {
-        this.rule = parser.functionCallExpression;
+        this.rule = grammar.functionCallExpression;
         successExpect("foo(a, b)",
                 new FunctionCallNode(
                         null,
@@ -435,7 +437,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
 
     @Test
     public void testClasses() {
-        this.rule = parser.classStatement;
+        this.rule = grammar.classStatement;
         successExpect("class Foo {}", new ClassStatementNode(null,new IdentifierNode(null,"Foo"), Arrays.asList()));
         successExpect("class Foo { fun bar() { return 1 } }",
                 new ClassStatementNode(
@@ -445,13 +447,13 @@ public class KneghelGrammarTests extends AutumnTestFixture {
                                 new FunctionStatementNode(
                                         null,
                                         new IdentifierNode(null,"bar"),
-                                        new FunctionArgumentsNode(null,Arrays.asList()),
+                                        Arrays.asList(),
                                         Arrays.asList(new ReturnStatementNode(null,new IntegerNode(null,1)))))));
     }
 
     @Test
     public void testClassAsRoot() {
-        this.rule = parser.root;
+        this.rule = grammar.root;
         failure("a = 1 + 2");
         failure("fun bar() { return 1 }");
         successExpect("class Foo {}", new ClassStatementNode(null,new IdentifierNode(null,"Foo"), Arrays.asList()));
@@ -463,33 +465,8 @@ public class KneghelGrammarTests extends AutumnTestFixture {
                                 new FunctionStatementNode(
                                         null,
                                         new IdentifierNode(null,"bar"),
-                                        new FunctionArgumentsNode(null, Arrays.asList()),
+                                        Arrays.asList(),
                                         Arrays.asList(new ReturnStatementNode(null,new IntegerNode(null,1)))))));
     }
-
-//    @Test
-//    public void testPrintCalls() {
-//        this.rule = parser.printStatement;
-//        successExpect("print(a)",
-//                new PrintStatementNode(
-//                        new IdentifierNode("a")));
-//        successExpect("print(\"a\")",
-//                new PrintStatementNode(
-//                        new StringNode("a")));
-//        successExpect("print(identifier)",
-//                new PrintStatementNode(
-//                        new IdentifierNode("identifier")));
-//        successExpect("print(\"identifier\")",
-//                new PrintStatementNode(
-//                        new StringNode("identifier")));
-//    }
-
-//    @Test
-//    public void testParsingString(){
-//        this.rule = parser.parseStringToInt;
-//        successExpect("int(\"4\")", new ParsingNode(new StringNode("4")));
-//        successExpect("int(\"57389\")",
-//                new ParsingNode(new StringNode("57389")));
-//    }
 }
 

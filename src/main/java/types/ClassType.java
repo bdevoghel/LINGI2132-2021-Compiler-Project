@@ -13,7 +13,7 @@ public final class ClassType extends Type
 
     @Override public String name() {
         String[] funs = NArrays.map(funTypes, new String[0], Type::name);
-        return String.format("(%s) -> %s", String.join(",", funs));
+        return String.format("%s{%s}", "ClassType", String.join(",", funs));
     }
 
     @Override public boolean equals (Object o) {

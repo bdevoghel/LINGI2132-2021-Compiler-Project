@@ -1,6 +1,7 @@
 package scopes;
 
 import AST.ASTNode;
+import AST.IdentifierNode;
 import norswap.uranium.Reactor;
 import types.*;
 
@@ -32,7 +33,12 @@ public final class ClassScope extends Scope
     public final SyntheticDeclarationNode _null  = decl("null",  VARIABLE);
 
     // root scope functions
-    public final SyntheticDeclarationNode print = decl("print", FUNCTION);
+    public final SyntheticDeclarationNode _print = decl("print", FUNCTION);
+    public final SyntheticDeclarationNode _int = decl("int", FUNCTION);
+    public final SyntheticDeclarationNode _str = decl("str", FUNCTION);
+    public final SyntheticDeclarationNode _len = decl("len", FUNCTION);
+    public final SyntheticDeclarationNode _makeArray = decl("makeArray", FUNCTION);
+    public final SyntheticDeclarationNode _makeDict = decl("makeDict", FUNCTION);
 
     // ---------------------------------------------------------------------------------------------
 
@@ -47,11 +53,18 @@ public final class ClassScope extends Scope
         reactor.set(Type,   "type",       TypeType.INSTANCE);
 
         reactor.set(Bool,   "declared",   BoolType.INSTANCE);
-        reactor.set(Int,    "declared",    IntType.INSTANCE);
+        reactor.set(Int,    "declared",   IntType.INSTANCE);
         reactor.set(Type,   "declared",   TypeType.INSTANCE);
 
         reactor.set(_true,  "type",       BoolType.INSTANCE);
         reactor.set(_false, "type",       BoolType.INSTANCE);
+
+        reactor.set(_print, "type",       new FunType(UnknownType.INSTANCE));
+        reactor.set(_int, "type",         new FunType(StringType.INSTANCE));
+        reactor.set(_str, "type",         new FunType(IntType.INSTANCE));
+        reactor.set(_len, "type",         new FunType(ArrayType.INSTANCE));
+        reactor.set(_makeArray, "type",   new FunType());
+        reactor.set(_makeDict, "type",    new FunType());
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -21,7 +21,7 @@ public class Scope
 
     // ---------------------------------------------------------------------------------------------
 
-    private final HashMap<String, DeclarationNode> declarations = new HashMap<>();
+    public final HashMap<String, DeclarationNode> declarations = new HashMap<>();
 
     // ---------------------------------------------------------------------------------------------
 

@@ -1,5 +1,6 @@
 /*
- * In part inspired by https://github.com/norswap/sigh/blob/775535d6aa6c85dd8b1881718e5e2a34efc6d5dd/src/norswap/sigh/SemanticAnalysis.java
+ * Our code is largely inspired by the implementation of the semantic analysis made by the Professor N. Laurent for his language Sigh.
+ * https://github.com/norswap/sigh/blob/775535d6aa6c85dd8b1881718e5e2a34efc6d5dd/src/norswap/sigh/SemanticAnalysis.java
  */
 
 package semantic;
@@ -12,7 +13,6 @@ import norswap.utils.visitors.Walker;
 import scopes.*;
 import types.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -67,6 +67,7 @@ public final class SemanticAnalysis {
 
         walker.register(ClassStatementNode.class,       PRE_VISIT, analysis::classStatement);
         walker.register(FunctionStatementNode.class,    PRE_VISIT, analysis::functionStatement);
+        walker.register(FunctionParameterNode.class,    PRE_VISIT, analysis::functionParameter);
         walker.register(FunctionArgumentsNode.class,    PRE_VISIT, analysis::functionArguments);
         walker.register(FunctionCallNode.class,         PRE_VISIT, analysis::functionCall);
 
@@ -80,6 +81,7 @@ public final class SemanticAnalysis {
         walker.register(FunctionStatementNode.class,    POST_VISIT, analysis::popScope);
         walker.register(IfStatementNode.class,          POST_VISIT, analysis::popScope);
         walker.register(WhileStatementNode.class,       POST_VISIT, analysis::popScope);
+        walker.register(AssignmentNode.class,           POST_VISIT, analysis::remove_FromScope);
 
         // Fallback rules
         walker.registerFallback(PRE_VISIT, node -> {});
@@ -91,7 +93,9 @@ public final class SemanticAnalysis {
 
     private static boolean isComparableTo (Type a, Type b) {
         return a.isReference() && b.isReference()
-                || a.equals(b);
+                || a.equals(b)
+                || a instanceof UnknownType
+                || b instanceof UnknownType;
     }
 
     private static String arithmeticError (BinaryExpressionNode node, Object left, Object right) {
@@ -106,6 +110,8 @@ public final class SemanticAnalysis {
     {
 //        if (a instanceof VoidType || b instanceof VoidType) // TODO to add ??
 //            return false;
+        if (a instanceof UnknownType)
+            return true;
 
         if (a instanceof IntType && b instanceof DoubleType)
             return true;
@@ -143,7 +149,6 @@ public final class SemanticAnalysis {
         if (maybeCtx != null) {
             R.set(node, "decl", maybeCtx.declaration);
             R.set(node, "scope", maybeCtx.scope);
-
             R.rule(node, "type")
                     .using(maybeCtx.declaration, "type")
                     .by(Rule::copyFirst);
@@ -176,7 +181,7 @@ public final class SemanticAnalysis {
     }
 
     private void binaryExpression (BinaryExpressionNode node) {
-    // TODO allow for fancy arithmetic with string etc
+    // TODO !! allow for fancy arithmetic with string etc
         R.rule(node, "type")
                 .using(node.leftChild.attr("type"), node.rightChild.attr("type"))
                 .by(r -> {
@@ -189,42 +194,57 @@ public final class SemanticAnalysis {
                         binaryEquality(r, node, left, right);}
                     else if (node.operator == GREATER_THAN || node.operator == GREATER_OR_EQUAL || node.operator == LESS_OR_EQUAL || node.operator == LESS_THAN){
                         binaryComparison(r, node, left, right);
+                    } else if (node.operator == AND || node.operator == OR) {
+                        boolBinaryArithmetic(r, node, left, right);
                     }
                 });
     }
 
+    private void boolBinaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right) {
+        if (!(left instanceof BoolType || right instanceof BoolType || right instanceof UnknownType)) {
+            r.error(arithmeticError(node, left, right), node);
+        } else {
+            r.set(0, BoolType.INSTANCE);
+        }
+    }
+
     private void binaryArithmetic (Rule r, BinaryExpressionNode node, Type left, Type right) {
-        if (left instanceof IntType) {
+        if (left instanceof BoolType || left instanceof StringType || right instanceof BoolType || right instanceof StringType) {
+            r.error(arithmeticError(node, left, right), node);
+        } else if (left instanceof IntType) {
             if (right instanceof IntType) {
                 r.set(0, IntType.INSTANCE);
-            } else if (!(right instanceof DoubleType)) {
-                r.error(arithmeticError(node, "Int", right), node);
-            } else
+            } else if (right instanceof DoubleType) {
                 r.set(0, DoubleType.INSTANCE);
+            } else
+                r.error(arithmeticError(node, "Int", right), node);
         } else if (left instanceof DoubleType) {
             if (right instanceof IntType || right instanceof DoubleType) {
                 r.set(0, DoubleType.INSTANCE);
             } else
-                r.error(arithmeticError(node, "Int", right), node);
+                r.error(arithmeticError(node, "Double", right), node);
+        } else if (left instanceof UnknownType) {
+            r.set(0, UnknownType.INSTANCE);
         } else
             r.error(arithmeticError(node, left, right), node);
     }
 
     private void binaryEquality (Rule r, BinaryExpressionNode node, Type left, Type right) {
-        r.set(0, BoolType.INSTANCE);
-
-        if (!isComparableTo(left, right))
+        if (!isComparableTo(left, right)) {
             r.errorFor(format("Trying to compare incomparable types %s and %s", left, right),
                     node);
+        } else {
+            r.set(0, BoolType.INSTANCE);
+        }
     }
 
     private void binaryComparison (Rule r, BinaryExpressionNode node, Type left, Type right) {
         r.set(0, BoolType.INSTANCE);
 
-        if (!(left instanceof IntType) && !(left instanceof DoubleType))
+        if (!(left instanceof IntType || left instanceof DoubleType || left instanceof UnknownType))
             r.errorFor("Attempting to perform arithmetic comparison on non-numeric type: " + left,
                     node.leftChild);
-        if (!(right instanceof IntType) && !(right instanceof DoubleType))
+        if (!(right instanceof IntType || right instanceof DoubleType || right instanceof UnknownType))
             r.errorFor("Attempting to perform arithmetic comparison on non-numeric type: " + right,
                     node.rightChild);
     }
@@ -275,7 +295,7 @@ public final class SemanticAnalysis {
                 .using(node.index, "type")
                 .by(r -> {
                     Type type = r.get(0);
-                    if (!(type instanceof IntType))
+                    if (!(type instanceof IntType || type instanceof UnknownType))
                         r.error("Indexing an array using a non-int-valued expression.", node.index);
                 });
 
@@ -285,6 +305,8 @@ public final class SemanticAnalysis {
                     Type type = r.get(0);
                     if (type instanceof ArrayType)
                         r.set(0, ((ArrayType) type).componentType);
+                    else if (type instanceof UnknownType)
+                        r.set(0, UnknownType.INSTANCE);
                     else
                         r.error("Trying to index a non-array expression of type " + type, node);
                 });
@@ -297,7 +319,6 @@ public final class SemanticAnalysis {
             if (maybeCtx == null) {
                 scope.declare(((IdentifierNode) node.variable).getValue(), node);
                 R.set(node, "scope", scope);
-
                 R.rule(node, "type")
                         .using(node.value.attr("type"))
                         .by(Rule::copyFirst);
@@ -331,7 +352,7 @@ public final class SemanticAnalysis {
                 .using(node.condition, "type")
                 .by(r -> {
                     Type type = r.get(0);
-                    if (!(type instanceof BoolType)) {
+                    if (!(type instanceof BoolType || type instanceof UnknownType)) {
                         r.error("If statement with a non-boolean condition of type: " + type,
                                 node.condition);
                     }
@@ -351,15 +372,9 @@ public final class SemanticAnalysis {
                                 node.condition);
                     }
                 });
-    }
 
-    private void functionStatement(FunctionStatementNode node) {
-        scope.declare(node.identifier.getValue(), node);
-        scope = new Scope(node, scope);
-        R.set(node, "scope", scope);
-
-        Attribute[] dependencies = new Attribute[node.arguments.elements.size()];
-        forEachIndexed(node.arguments.elements, (i, param) ->
+        Attribute[] dependencies = new Attribute[node.statements.size()];
+        forEachIndexed(node.statements, (i, param) ->
                 dependencies[i] = param.attr("type"));
 
         R.rule(node, "type")
@@ -370,6 +385,32 @@ public final class SemanticAnalysis {
                         paramTypes[i] = r.get(i);
                     r.set(0, new FunType(paramTypes));
                 });
+
+    }
+
+    private void functionStatement(FunctionStatementNode node) {
+        scope.declare(node.identifier.getValue(), node);
+        scope = new Scope(node, scope);
+        R.set(node, "scope", scope);
+
+        Attribute[] dependencies = new Attribute[node.arguments.size()];
+        forEachIndexed(node.arguments, (i, param) ->
+                dependencies[i] = param.attr("type"));
+
+        R.rule(node, "type")
+                .using(dependencies)
+                .by(r -> {
+                    Type[] paramTypes = new Type[dependencies.length];
+                    for (int i = 0; i < paramTypes.length; ++i)
+                        paramTypes[i] = r.get(i);
+                    r.set(0, new FunType(paramTypes));
+                });
+    }
+
+    public void functionParameter(FunctionParameterNode node) {
+        scope.declare(node.param.value, node);
+        R.set(node, "type", UnknownType.INSTANCE);
+        R.set(node, "scope", scope);
     }
 
     private void functionArguments(FunctionArgumentsNode node) {
@@ -396,7 +437,7 @@ public final class SemanticAnalysis {
 
                     DeclarationContext maybeCtx = scope.lookup(node.function.getValue());
 
-                    List<ExpressionNode> params = ((FunctionStatementNode) maybeCtx.declaration).arguments.elements;
+                    List<FunctionParameterNode> params = ((FunctionStatementNode) maybeCtx.declaration).arguments;
                     List<ExpressionNode> args = node.arguments.elements;
 
                     if (params.size() != args.size())
@@ -409,11 +450,6 @@ public final class SemanticAnalysis {
         // Class is root of Kneghel
         assert scope == null;
         scope = new ClassScope(node, R);
-        scope.declare("int", node);
-        scope.declare("print", node);
-        scope.declare("makeArray", node);
-        scope.declare("len", node);
-        scope.declare("makeDict", node);
         scope.declare(node.identifier.getValue(), node);
 
         scope.declare("args",
@@ -440,6 +476,11 @@ public final class SemanticAnalysis {
 
     private void popScope (ASTNode node) {
         scope = scope.parent;
+    }
+
+    private void remove_FromScope (AssignmentNode node) {
+        if ( node.variable instanceof IdentifierNode && ((IdentifierNode) node.variable).value.equals("_") )
+            scope.declarations.remove("_");
     }
 
 }

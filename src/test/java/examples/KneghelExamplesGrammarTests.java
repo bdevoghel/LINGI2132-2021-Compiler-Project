@@ -5,7 +5,7 @@ import static AST.BinaryOperator.*;
 
 import norswap.autumn.ParseResult;
 import norswap.autumn.AutumnTestFixture;
-import parser.KneghelGrammar;
+import grammar.KneghelGrammar;
 
 import java.util.Arrays;
 import java.io.IOException;
@@ -13,15 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 
-public class KneghelExamplesTests extends AutumnTestFixture {
+public class KneghelExamplesGrammarTests extends AutumnTestFixture {
 
-    KneghelGrammar parser = new KneghelGrammar();
+    KneghelGrammar grammar = new KneghelGrammar();
 
     public static void main(String[] args) {
         String[] files = new String[] {"Fibonacci.kneghel", "FizzBuzz.kneghel", "Prime.kneghel", "Sort.kneghel", "Uniq.kneghel"};
 
-        KneghelExamplesTests test = new KneghelExamplesTests();
-        test.rule = test.parser.root;
+        KneghelExamplesGrammarTests test = new KneghelExamplesGrammarTests();
+        test.rule = test.grammar.root;
 
         for (int i = 0; i < files.length; i++) {
             String content = "";
@@ -33,18 +33,14 @@ public class KneghelExamplesTests extends AutumnTestFixture {
             }
 
             System.out.println("Testing " + (i+1)+"/"+files.length + " : " + files[i]);
-            ParseResult result = null;
-            if (files[i].equals("Fibonacci.kneghel")) {
-                result = test.testFibonacci(content);
-            } else if (files[i].equals("FizzBuzz.kneghel")) {
-                result = test.testFizzBuzz(content);
-            } else if (files[i].equals("Prime.kneghel")) {
-                result = test.testPrime(content);
-            } else if (files[i].equals("Sort.kneghel")) {
-                result = test.testSort(content);
-            } else if (files[i].equals("Uniq.kneghel")) {
-                result = test.testUniq(content);
-            }
+            ParseResult result = switch (files[i]) {
+                case "Fibonacci.kneghel" -> test.testFibonacci(content);
+                case "FizzBuzz.kneghel" -> test.testFizzBuzz(content);
+                case "Prime.kneghel" -> test.testPrime(content);
+                case "Sort.kneghel" -> test.testSort(content);
+                case "Uniq.kneghel" -> test.testUniq(content);
+                default -> null;
+            };
             System.out.println(result);
         }
     }
@@ -55,7 +51,7 @@ public class KneghelExamplesTests extends AutumnTestFixture {
                         Arrays.asList(
                                 new FunctionStatementNode(null,
                                         new IdentifierNode(null, "isPrime"),
-                                        new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "number"))),
+                                        Arrays.asList( new FunctionParameterNode(null, new IdentifierNode(null, "number")) ),
                                         Arrays.asList(
                                                 new IfStatementNode(null,
                                                         new BinaryExpressionNode(null, new IdentifierNode(null, "number"), LESS_OR_EQUAL, new IntegerNode(null, 1)),
@@ -82,7 +78,7 @@ public class KneghelExamplesTests extends AutumnTestFixture {
                                 ),
                                 new FunctionStatementNode(null,
                                         new IdentifierNode(null, "main"),
-                                        new FunctionArgumentsNode(null, Arrays.asList(new IdentifierNode(null, "args"))),
+                                        Arrays.asList( new FunctionParameterNode(null, new IdentifierNode(null, "args")) ),
                                         Arrays.asList(
                                                 new AssignmentNode(null,
                                                         new IdentifierNode(null, "N"),

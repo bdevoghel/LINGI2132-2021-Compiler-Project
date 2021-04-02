@@ -6,9 +6,9 @@ import java.util.List;
 
 public class WhileStatementNode extends StatementNode {
     public ExpressionNode condition;
-    public List statements;
+    public List<StatementNode> statements;
 
-    public WhileStatementNode(Span span, ExpressionNode condition, List statements) {
+    public WhileStatementNode(Span span, ExpressionNode condition, List<StatementNode> statements) {
         super(span);
         this.condition = condition;
         this.statements = statements;

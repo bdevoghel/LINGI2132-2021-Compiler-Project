@@ -2,7 +2,7 @@
  * In part inspired by https://github.com/norswap/autumn/blob/master/examples/norswap/lang/java/JavaGrammar.java, especially for the lexical parsing
  */
 
-package parser;
+package grammar;
 
 import AST.*;
 import norswap.autumn.Grammar;
@@ -79,9 +79,6 @@ public final class KneghelGrammar extends Grammar {
     public rule _class = reserved("class");
     public rule _return = reserved("return");
     public rule _main = reserved("main")    .as_val("main");
-//    public rule _args = reserved("args");//    .as_val("args");
-//    public rule _print = reserved("print");//  .as_val(word("print"));
-//    public rule _int = reserved("int");//      .as_val(word("int"));
 
     // Variable name
     public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
@@ -200,19 +197,17 @@ public final class KneghelGrammar extends Grammar {
     public rule whileStatement = seq(_while, logicExpression, OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> new WhileStatementNode($.span(), $.$0(), $.$1()));
 
-    // Print & Parse
-//    public rule printStatement = seq(_print, OPENPARENT, choice(string, identifier), CLOSEPARENT)
-//            .push($ -> new PrintStatementNode($.$0()));
-
-//    public rule parseStringToInt = seq(_int, OPENPARENT, choice(string,identifier), CLOSEPARENT)
-//            .push($ -> new ParsingNode($.$0()));
 
     // Function
+    public rule functionParameter = identifier.push($ -> new FunctionParameterNode($.span(), $.$0()));
+
+    public rule functionParameters = seq(OPENPARENT, functionParameter.sep(0, COMMA), CLOSEPARENT)
+            .push($ -> $.$list());
 
     public rule functionArguments = seq(OPENPARENT, expression.sep(0, COMMA), CLOSEPARENT)
             .push($ -> new FunctionArgumentsNode($.span(), $.$list()));
 
-    public rule functionHeader = seq(_fun, identifier, functionArguments)
+    public rule functionHeader = seq(_fun, identifier, functionParameters)
             .push($ -> new FunctionStatementNode($.span(), $.$0(), $.$1()));
 
     public rule functionMainHeader = seq(_fun, _main,
@@ -220,7 +215,7 @@ public final class KneghelGrammar extends Grammar {
             .push($ -> new FunctionStatementNode(
                     $.span(),
                     new IdentifierNode($.span(), $.$0()),
-                    new FunctionArgumentsNode($.span(),Arrays.asList( new IdentifierNode($.span(), "args") ))));
+                    Arrays.asList( new FunctionParameterNode($.span(), new IdentifierNode($.span(), "args")) )));
 
     public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
             .push($ -> ((FunctionStatementNode) $.$0()).setStatements($.$1()));
@@ -242,7 +237,8 @@ public final class KneghelGrammar extends Grammar {
         return root;
     }
 
-    /**public ParseResult parse (String input) {
+    /**
+    public ParseResult parse (String input) {
         ParseResult result = Autumn.parse(root, input, ParseOptions.get());
         if (result.fullMatch) {
             System.out.println(result.toString());
@@ -253,5 +249,6 @@ public final class KneghelGrammar extends Grammar {
             System.out.println(result.userErrorString(new LineMapString(input), "<input>"));
         }
         return result;
-    }**/
+    }
+    */
 }

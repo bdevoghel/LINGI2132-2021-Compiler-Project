@@ -2,6 +2,7 @@ package types;
 
 public final class ArrayType extends Type
 {
+    public static final ArrayType INSTANCE = new ArrayType(IntType.INSTANCE);
     public final Type componentType;
 
     public ArrayType (Type componentType) {

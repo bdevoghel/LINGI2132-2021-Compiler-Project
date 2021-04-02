@@ -6,7 +6,7 @@ import norswap.autumn.positions.LineMapString;
 import norswap.uranium.Reactor;
 import norswap.uranium.UraniumTestFixture;
 import norswap.utils.visitors.Walker;
-import parser.KneghelGrammar;
+import grammar.KneghelGrammar;
 import org.testng.annotations.Test;
 
 
@@ -47,7 +47,7 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     public void testInteger() {
         autumnFixture.rule = grammar.integer;
         successInput("5");
-        successInput("5655"); //TODO failure input
+        successInput("5655");
         successInput("-1");
     }
 
@@ -56,15 +56,16 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         autumnFixture.rule = grammar.doub;
         successInput("5.");
         successInput("5.0");
-        successInput("-5478.32"); //TODO failure input
+        successInput("5.6e10");
+        successInput("5.6e-1");
+        successInput("-5478.32");
     }
 
     @Test
     public void testBool() {
         autumnFixture.rule = grammar.bool;
         successInput("true");
-        successInput("false"); //TODO failure input
-        //failureInput("TRUE");
+        successInput("false");
     }
 
     @Test
@@ -72,23 +73,51 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         autumnFixture.rule = grammar.string;
         successInput("\"abc\"");
         successInput("\" a b c \"");
-        //failureInput("\"\"\""); //TODO failure input
     }
 
     @Test
     public void testBinaryExpression() {
         autumnFixture.rule = grammar.additionExpression;
-        successInput("1+2");
-        successInput("1*2");
+        successInput("1 + 2");
+        successInput("1 * 2");
         successInput("1 + 2 + 3 - 4");
         successInput("1 + 2 * 3 / 4 + 5");
         successInput("1 - 2 + 3");
-        //successInput("-1 + 2");
-        successInput("1 / 2+ 3");
+        successInput("-1 + 2");
+        successInput("1 / 2 + 3");
         successInput("1 + 2 % 3");
         successInput("1.0 + 2 % 3.0");
+
+        successInput("1 + 2. * 3.4e-5 % 6. / 7");
+        successInput("1 / 2");
+        successInput("1. / 2");
+        successInput("1 / 2.");
+        successInput("1. / 2.");
+
+        failureInput("1 + true");
+        failureInput("1 * true");
+        failureInput("false * true");
+        failureInput("false + true");
+
+        failureInput("\"a\" + 1");
+        failureInput("\"a\" + true");
+        failureInput("\"a\" * 1");
+        failureInput("\"a\" * true");
+
+        failureInput("\"a\" + \"a\"");
+        failureInput("\"a\" * \"a\"");
+
+        // x has to be in scope
+        autumnFixture.rule = grammar.root;
+        failureInput("class A { fun b(x) {r= 1 + true} }");
+
+        failureInput("class A { fun b(x) {r= x + true} }");
+        failureInput("class A { fun b(x) {r= true * x} }");
+        failureInput("class A { fun b(x) {r= true + x} }");
+        failureInput("class A { fun b(x) {r= \"a\" + x} }");
+        failureInput("class A { fun b(x) {r= \"a\" * x} }");
 //        successInput("\"a\" + 1"); // TODO to allow see TODO in arithmetic
-        //failureInput("1 + a"); //TODO JE NE SAIS PAS COMMENT FAIRE DES FAILURES
+//        failureInput("1 + a"); //TODO JE NE SAIS PAS COMMENT FAIRE DES FAILURES
     }
 
     @Test
@@ -104,18 +133,19 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     public void testIfStatement() {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { fun bar() {if true {a = 1+2}} }");
-        successInput("class Foo { fun bar(a) {if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }} }");
-        successInput("class Foo { fun bar(a) {if 1 == 2 { _ = print(a) } }}");
         successInput("class Foo { fun bar() {if true { a=2 } else { a=3 }} }");
+        successInput("class Foo { fun bar(a) {if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }} }");
+        successInput("class Foo { fun bar(a, b) {if b == 2 { _ = print(a) } }}");
     }
 
     @Test
     public void testWhileStatement() {
         autumnFixture.rule = grammar.root;
-        successInput("class Foo { fun bar() {while 1 > 2 { a = b } }}");
-        successInput("class Foo { fun bar(b) {while true { a = b + 1 }} }");
-        successInput("class Foo { fun bar(a, b) {while a == b { if c == 1 {b = 2}} }}");
-        successInput("class Foo { fun bar() {while true { a = foo(a, b)}} }");
+        successInput("class Foo { fun bar(a, b) {while a > 2 { a = a - b } }}");
+        successInput("class Foo { fun bar(b) {while true { a = b + 1 } return a} }");
+        successInput("class Foo { fun bar(a, b, c) {while a == b { c = b + 2 - a} }}");
+        successInput("class Foo { fun bar() {a = 0 b = 1 while true {  a = b+1}} }");
+        failureInput("class Foo { fun bar() {while true { a = true + 1}} }");
 
     }
 
@@ -128,8 +158,8 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         successInput("class Foo { fun bar(a) {a[0]=1} }");
         successInput("class Foo { fun bar() {a=1 return a} fun fuzz(a) {return a} }");
         successInput("class Foo { fun bar() {a = 1 + 2 return a} }");
-        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_ = bar() _= fuzz(a)} }");
-        failureInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_ = bar(b) _= fuzz(a)} }");
+        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_=bar() _=fuzz(a)} }");
+        failureInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_=bar(b) _=fuzz(a)} }");
     }
 
     @Test
@@ -137,154 +167,5 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { fun bar() { a = 1 return a } }");
         successInput("class Foo { fun bar() { a = 1 return a } }");
-    }
-
-
-    @Test
-    public void testPrime() {
-        successInput("class Prime {\n" +
-                "    fun isPrime(number) {\n" +
-                "        if number <= 1 {\n" +
-                "            return false\n" +
-                "        }\n" +
-                "        prime = true\n" +
-                "        i = 2\n" +
-                "        while i < number && prime {\n" +
-                "            if number % i == 0 {\n" +
-                "                prime = false\n" +
-                "            }\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        return prime\n" +
-                "    }\n" +
-                "\n" +
-                "    fun main(args) {\n" +
-                "        N = int(args[0])\n" + //TODO args[0] not identifier bc it is arraymapaccessnode maybe make arraymapaccessnode extend identifier ?
-                //"        N = int(args)\n" +
-                "        current = 2\n" +
-                "        count = 0\n" +
-                "        while count < N {\n" +
-                "            if isPrime(current) {\n" +
-                "                _ = print(current)\n" +
-                "                count = count + 1\n" +
-                "            }\n" +
-                "            current = current + 1\n" +
-                "        }\n" +
-                "        return 0\n" +
-                "    }\n" +
-                "}");
-    }
-
-    @Test
-    public void testFizzBuzz() {
-        successInput("class FizzBuzz {\n" +
-                "    fun main(args) {\n" +
-                "        i = 1\n" +
-                "        while i<=100{\n" +
-                "            if i%15==0{\n" +
-                "                _= print(\"FizzBuzz\")\n" +
-                "            } else if i %3 ==0 {\n" +
-                "                _ =print(\"Fizz\")\n" +
-                "            } else if i% 5== 0 {\n" +
-                "                _=print(\" - Buzz\")\n" +
-                "            } else {\n" +
-                "                _ = print(i)\n" +
-                "            }\n" +
-                "\n" +
-                "            i=i+1\n" +
-                "        }\n" +
-                "        return 0\n" +
-                "    }\n" +
-                "}");
-    }
-
-    @Test
-    public void testFibonacci() {
-        successInput("class Fibonacci {\n" +
-                "\n" +
-                "    /*\n" +
-                "     * Recursive fibonacci function\n" +
-                "     */\n" +
-                "    fun fibonacci(a, b, N) {\n" +
-                "        if N == 0 {\n" +
-                "            return null // end of recursion\n" +
-                "        }\n" +
-                "        _ = print(a)\n" +
-                "        return fibonacci(b, a+b, N-1)\n" +
-                "    }\n" +
-                "\n" +
-                "    fun main(args) {\n" +
-                "        N = int(args[0])\n" + //TODO same problem as above
-               // "        N = int(args)\n" +
-                //"        _ = fibonacci(0, 1, N)\n" + //TODO integer is not identifier ....
-                "        zero = 0 \n" +
-                "        one = 1 \n" +
-                "        _ = fibonacci(zero, one, N)\n" +
-                "        return 0\n" +
-                "    }\n" +
-                "}");
-    }
-
-    @Test
-    public void testSort() {
-        successInput("class Sort {\n" +
-                "\n" +
-                "    fun swap(a, i, j) {\n" +
-                "        tmp = a[i]\n" +
-                "        a[i] = a[j]\n" +
-                "        a[j] = tmp\n" +
-                "        return true\n" +
-                "    }\n" +
-                "\n" +
-                "    fun sort(numbers) {\n" +
-                "        i = 0\n" +
-                "        while i < len(numbers) {\n" +
-                "            j = i+1\n" +
-                "            while j < len(numbers) {\n" +
-                "                if numbers[i] > numbers[j] {\n" +
-                "                    _ = swap(numbers, i, j)\n" +
-                "                }\n" +
-                "                j = j + 1\n" +
-                "            }\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        return true\n" +
-                "    }\n" +
-                "\n" +
-                "    fun main(args) {\n" +
-                "        numbers = makeArray(len(args))\n" +
-                "        i = 0\n" +
-                "        while i < len(args) {\n" +
-                "            numbers[i] = int(args[i])\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        _ = sort(numbers)\n" +
-                "        i = 0\n" +
-                "        while i < len(numbers) {\n" +
-                "            _ = print(numbers[i])\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        return 0\n" +
-                "    }\n" +
-                "}\n");
-    }
-
-    @Test
-    public void testUniq() {
-        successInput("class Uniq {\n" +
-                "\n" +
-                "    fun main(args) {\n" +
-                "        m = makeDict()\n" +
-                "        i = 0\n" +
-                "        while i < len(args) {\n" +
-                "            if m[args[i]] == null {\n" +
-                "                _ = print(args[i])\n" +
-                "                m[args[i]] = true\n" +
-                "            }\n" +
-                "            i = i + 1\n" +
-                "        }\n" +
-                "        return 0\n" +
-                "    }\n" +
-                "}\n");
     }
 }
