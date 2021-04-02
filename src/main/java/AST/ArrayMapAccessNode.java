@@ -2,12 +2,12 @@ package AST;
 
 import norswap.autumn.positions.Span;
 
-public class ArrayMapAccessNode extends ExpressionNode {
+public class ArrayMapAccessNode extends IdentifierNode {
     public IdentifierNode arrayMap;
     public ExpressionNode index;
 
     public ArrayMapAccessNode(Span span, IdentifierNode arrayMap, ExpressionNode index) {
-        super(span);
+        super(span, arrayMap + "[" + index + "]");
         this.arrayMap = arrayMap;
         this.index = index;
     }
