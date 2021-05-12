@@ -10,7 +10,7 @@ import grammar.KneghelGrammar;
 import org.testng.annotations.Test;
 
 
-public class SemanticAnalysisTest extends UraniumTestFixture {
+public class SemanticAnalysisTests extends UraniumTestFixture {
 
     private final KneghelGrammar grammar = new KneghelGrammar();
     private final AutumnTestFixture autumnFixture = new AutumnTestFixture();
@@ -166,6 +166,13 @@ public class SemanticAnalysisTest extends UraniumTestFixture {
     public void testFunctionStatement() {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { fun bar() { a = 1 return a } }");
-        successInput("class Foo { fun bar() { a = 1 return a } }");
+        failureInput("class Foo { fun bar() { a = 1 return a } fun bar() { b = 1 return b } }");
+    }
+
+    @Test
+    public void testMain() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun main(args) { a = 1 return a } }");
+        failureInput("class Foo { fun main(args) { a = 1 return a } fun main(args) { b = 1 return b } }");
     }
 }

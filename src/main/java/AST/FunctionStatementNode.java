@@ -38,7 +38,7 @@ public class FunctionStatementNode extends DeclarationNode {
 
     @Override
     public String toString() {
-        return "FunctionStatementNode:[" + identifier + "(" + arguments + "){" + statements + "}"+"]";
+        return "FunctionStatementNode:" + identifier + "(" + arguments + "){" + statements + "}";
     }
 
     /**

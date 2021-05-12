@@ -21,6 +21,12 @@ public class FunctionParameterNode extends DeclarationNode {
     }
 
     @Override
+    public String toString() {
+        return "FunctionParameterNode:" + param.value;
+    }
+
+
+    @Override
     public String contents() {
         return param.getValue();
     }

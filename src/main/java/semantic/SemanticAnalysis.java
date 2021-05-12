@@ -8,6 +8,7 @@ import AST.*;
 import norswap.uranium.Attribute;
 import norswap.uranium.Reactor;
 import norswap.uranium.Rule;
+import norswap.uranium.SemanticError;
 import norswap.utils.visitors.ReflectiveFieldWalker;
 import norswap.utils.visitors.Walker;
 import scopes.*;
@@ -389,7 +390,11 @@ public final class SemanticAnalysis {
     }
 
     private void functionStatement(FunctionStatementNode node) {
-        scope.declare(node.identifier.getValue(), node);
+//        if (scope.lookup(node.identifier.getValue()) == null) {
+            scope.declare(node.identifier.getValue(), node);
+//        } else {
+//            R.error(new SemanticError("Function already implemented, cannot have same name.", null, node.identifier));
+//        }
         scope = new Scope(node, scope);
         R.set(node, "scope", scope);
 

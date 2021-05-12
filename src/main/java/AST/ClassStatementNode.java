@@ -34,7 +34,7 @@ public class ClassStatementNode extends DeclarationNode {
 
     @Override
     public String toString() {
-        return "ClassStatementNode:[" + functions + "]";
+        return "ClassStatementNode:" + functions;
     }
 
     /**
