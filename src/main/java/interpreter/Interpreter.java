@@ -65,9 +65,11 @@ public final class Interpreter
         visitor.register(IntLiteralNode.class,           this::intLiteral);
         visitor.register(FloatLiteralNode.class,         this::floatLiteral);
         visitor.register(StringLiteralNode.class,        this::stringLiteral);
+        visitor.register(BoolLiteralNode.class,          this::boolLiteral);
+        visitor.register(NullLiteralNode.class,          this::nullLiteral);
+        visitor.register(ArrayLiteralNode.class,         this::arrayLiteral);
         visitor.register(ReferenceNode.class,            this::reference);
 //        visitor.register(ConstructorNode.class,          this::constructor);
-        visitor.register(ArrayLiteralNode.class,         this::arrayLiteral);
 //        visitor.register(ParenthesizedNode.class,        this::parenthesized);
 //        visitor.register(FieldAccessNode.class,          this::fieldAccess);
         visitor.register(ArrayAccessNode.class,          this::arrayAccess);
@@ -133,6 +135,12 @@ public final class Interpreter
 
     // ---------------------------------------------------------------------------------------------
 
+    private boolean isPrimitive(Object o) {
+        return o instanceof String || o instanceof Long || o instanceof Boolean;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
     private Long intLiteral (IntLiteralNode node) {
         return node.value;
     }
@@ -144,6 +152,10 @@ public final class Interpreter
     private String stringLiteral (StringLiteralNode node) {
         return node.value;
     }
+
+    private Boolean boolLiteral (BoolLiteralNode node) { return node.value;}
+
+    private Object nullLiteral (NullLiteralNode node) {return Null.INSTANCE;}
 
 //    // ---------------------------------------------------------------------------------------------
 //
@@ -183,13 +195,12 @@ public final class Interpreter
         if (numeric)
             return numericOp(node, floating, (Number) left, (Number) right);
 
-        // TODO implement
-//        switch (node.operator) {
-//            case EQUALITY:
-//                return  leftType.isPrimitive() ? left.equals(right) : left == right;
-//            case NOT_EQUALS:
-//                return  leftType.isPrimitive() ? !left.equals(right) : left != right;
-//        }
+        switch (node.operator) {
+            case EQUALITY:
+                return  isPrimitive(leftType) ? left.equals(right) : left == right;
+            case NOT_EQUALS:
+                return  isPrimitive(leftType) ? !left.equals(right) : left != right;
+        }
 
         throw new Error("should not reach here");
     }
