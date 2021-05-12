@@ -1,4 +1,4 @@
-package ast_new;
+package ast;
 
 import norswap.autumn.positions.Span;
 import norswap.uranium.Attribute;

@@ -1,4 +1,4 @@
-package AST;
+package ast;
 
 import norswap.autumn.positions.Span;
 

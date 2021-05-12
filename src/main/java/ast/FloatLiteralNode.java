@@ -1,12 +1,12 @@
-package ast_new;
+package ast;
 
 import norswap.autumn.positions.Span;
 
-public final class IntLiteralNode extends ExpressionNode
+public final class FloatLiteralNode extends ExpressionNode
 {
-    public final long value;
+    public final double value;
 
-    public IntLiteralNode (Span span, long value) {
+    public FloatLiteralNode (Span span, double value) {
         super(span);
         this.value = value;
     }
@@ -19,12 +19,12 @@ public final class IntLiteralNode extends ExpressionNode
     public boolean equals(Object obj) {
         if (getClass()  != obj.getClass())
             return false;
-        IntLiteralNode other = (IntLiteralNode) obj;
+        FloatLiteralNode other = (FloatLiteralNode) obj;
         return this.value == other.value;
     }
 
     @Override
     public String toString () {
-        return "IntLiteral:" + value;
+        return "FloatLiteral:" + value;
     }
 }

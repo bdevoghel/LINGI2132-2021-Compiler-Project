@@ -1,254 +1,315 @@
-/*
- * In part inspired by https://github.com/norswap/autumn/blob/master/examples/norswap/lang/java/JavaGrammar.java, especially for the lexical parsing
- */
-
 package grammar;
 
-import AST.*;
 import norswap.autumn.Grammar;
-import norswap.autumn.actions.StackPush;
+import ast.*;
 
-import java.util.Arrays;
-
-import static AST.BinaryOperator.*;
-import static AST.UnaryOperator.*;
-
-public final class KneghelGrammar extends Grammar {
-
-    // LEXICAL
-
-    // Whitespace
-
-    public rule LINECOMMENT = str("//");
-    public rule BLOCKCOMMENTSTART = str("/*");
-    public rule BLOCKCOMMENTEND = str("*/");
-
-    public rule notLine = seq(str("\n").not(), any);
-    public rule lineComment = seq(LINECOMMENT, notLine.at_least(0), str("\n").opt());
-
-    public rule notCommentEnd = seq(BLOCKCOMMENTEND.not(), any);
-    public rule blockComment = seq(BLOCKCOMMENTSTART, notCommentEnd.at_least(0), BLOCKCOMMENTEND);
-
-    public rule spaceChar = cpred(Character::isWhitespace);
-    public rule whitespace = choice(spaceChar, lineComment, blockComment).at_least(0);
-
-    { ws = whitespace; }
-
-    public rule id_start = choice(alpha, "_");
-    { id_part = choice(alphanum, "_"); }
-
-    // Keywords and Operators
-    public rule EQ = word("=");
-    public rule EQEQ = word("==");
-    public rule NEQ = word("!=");
-    public rule LT = word("<");
-    public rule GT = word(">");
-    public rule LTEQ = word("<=");
-    public rule GTEQ = word(">=");
-    public rule PLUS = word("+");
-    public rule MINUS = word("-");
-    public rule MUL = word("*");
-    public rule DIV = word("/");
-    public rule MOD = word("%");
-    public rule AMP = word("&");
-    public rule BAR = word("|");
-    public rule AMPAMP = word("&&");
-    public rule BARBAR = word("||");
-    public rule EXCLAM = word("!");
-    public rule QUOTE = word("\"");
-    public rule BACKSLASH = word("\\");
-
-    public rule OPENBRACE = word("{");
-    public rule OPENPARENT = word("(");
-    public rule OPENBRACKET = word("[");
-    public rule CLOSEBRACE = word("}");
-    public rule CLOSEPARENT = word(")");
-    public rule CLOSEBRACKET = word("]");
-
-    public rule COMMA = word(",");
-
-    public rule _true = reserved("true")    .as_val(true);
-    public rule _false = reserved("false")  .as_val(false);
-    public rule _null = reserved("null")    .as_val(null);
+import static ast.UnaryOperator.*;
+import static ast.BinaryOperator.*;
 
 
-    public rule _if = reserved("if");
-    public rule _else = reserved("else");
-    public rule _while = reserved("while");
-    public rule _fun = reserved("fun");
-    public rule _class = reserved("class");
-    public rule _return = reserved("return");
-    public rule _main = reserved("main")    .as_val("main");
+@SuppressWarnings("Convert2MethodRef")
+public class KneghelGrammar extends Grammar
+{
+    // ==== LEXICAL ===========================================================
 
-    // Variable name
-    public rule identifier = identifier((seq(id_start, id_part.at_least(0))))
-            .push($ -> new IdentifierNode($.span(), $.str()));
+    public rule line_comment =
+            seq("//", seq(not("\n"), any).at_least(0));
+
+    public rule multiline_comment =
+            seq("/*", seq(not("*/"), any).at_least(0), "*/");
+
+    public rule ws_item = choice(
+            set(" \t\n\r;"),
+            line_comment,
+            multiline_comment);
+
+    {
+        ws = ws_item.at_least(0);
+        id_part = choice(alphanum, '_');
+    }
+
+    public rule STAR            = word("*");
+    public rule SLASH           = word("/");
+    public rule PERCENT         = word("%");
+    public rule PLUS            = word("+");
+    public rule MINUS           = word("-");
+    public rule LBRACE          = word("{");
+    public rule RBRACE          = word("}");
+    public rule LPAREN          = word("(");
+    public rule RPAREN          = word(")");
+    public rule LSQUARE         = word("[");
+    public rule RSQUARE         = word("]");
+//    public rule COLON           = word(":");
+    public rule EQUALS_EQUALS   = word("==");
+    public rule EQUALS          = word("=");
+    public rule BANG_EQUAL      = word("!=");
+    public rule LANGLE_EQUAL    = word("<=");
+    public rule RANGLE_EQUAL    = word(">=");
+    public rule LANGLE          = word("<");
+    public rule RANGLE          = word(">");
+    public rule AMP_AMP         = word("&&");
+    public rule BAR_BAR         = word("||");
+    public rule BANG            = word("!");
+//    public rule DOT             = word(".");
+//    public rule DOLLAR          = word("$");
+    public rule COMMA           = word(",");
+
+//    public rule _var            = reserved("var");
+    public rule _class          = reserved("class");
+    public rule _fun            = reserved("fun");
+//    public rule _struct         = reserved("struct");
+    public rule _if             = reserved("if");
+    public rule _else           = reserved("else");
+    public rule _while          = reserved("while");
+    public rule _return         = reserved("return");
+
+    public rule _true           = reserved("true")        .push($ -> new BoolLiteralNode($.span(), true));
+    public rule _false          = reserved("false")       .push($ -> new BoolLiteralNode($.span(), false));
+    public rule _null           = reserved("null")        .push($ -> new NullLiteralNode($.span()));
 
 
-    // Literal
+    public rule number =
+            seq(MINUS.opt(), choice('0', digit.at_least(1)));
 
-    public rule integer = seq(MINUS.opt(), choice('0', digit.at_least(1)))
-            .push($ -> new IntegerNode($.span(), Integer.parseInt($.str().replaceAll("\\s+",""))));
+    public rule integer =
+            number
+                    .push($ -> new IntLiteralNode($.span(), Long.parseLong($.str().replaceAll("\\s", ""))))
+                    .word();
 
-    public rule fractional = seq('.', digit.at_least(0));
+    public rule fractional =
+            seq('.', digit.at_least(0));
 
-    public rule exponent = seq(set("eE"), set("+-").opt(), choice('0', digit.at_least(1)));
+    public rule exponent =
+            seq(set("eE"), set("+-").opt(), choice('0', digit.at_least(1)));
 
-    public rule doub = seq(MINUS.opt(), choice('0', digit.at_least(1)), fractional, exponent.opt())
-            .push($ -> new DoubleNode($.span(), Double.parseDouble($.str().replaceAll("\\s+",""))));
+    public rule floating =
+            seq(number, fractional, exponent.opt())
+                    .push($ -> new FloatLiteralNode($.span(), Double.parseDouble($.str().replaceAll("\\s", ""))))
+                    .word();
 
-    public rule number = choice(doub, integer);
+    public rule reserved_lit =
+            choice(_true, _false, _null)
+                    .word();
 
-    public rule bool = choice(_true, _false)
-            .push($ -> new BooleanNode($.span(), Boolean.parseBoolean($.str())));
+    public rule string_char = choice(
+            seq(set('"', '\\').not(), any),
+            seq('\\', set("\\nrt")));
 
-    public rule notStringEnd = seq(QUOTE.not(), any); // TODO add escape literals
+    public rule string_content =
+            string_char.at_least(0)
+                    .push($ -> $.str());
 
-    public rule string = seq("\"", notStringEnd.at_least(0), "\"")
-            .push($ -> {
-                String s = $.str();
-                return new StringNode($.span(), s.substring(1, s.length()-1)); // slice String without quotes
-            });
+    public rule string =
+            seq('"', string_content, '"')
+                    .push($ -> new StringLiteralNode($.span(), $.$[0]))
+                    .word();
 
-    public rule value = lazy(() -> choice(
-            this.functionCallExpression,
-            this.arrayMapAccessExpression,
-            number, bool, identifier, string, _null
-            ).word());
+    public rule identifier =
+            identifier(seq(choice(alpha, '_'), id_part.at_least(0)))
+                    .push($ -> $.str());
 
+    // ==== SYNTACTIC =========================================================
 
-    // EXPRESSIONS & STATEMENTS
+    public rule reference =
+            identifier
+                    .push($ -> new ReferenceNode($.span(), $.$[0]));
 
-    // Simple expressions
-    StackPush pushBinaryExpression = $ -> new BinaryExpressionNode($.span(), $.$0(), $.$1(), $.$2());
-    StackPush pushUnaryExpression = $ -> new UnaryExpressionNode($.span(), $.$0(), $.$1());
+//    public rule constructor =
+//            seq(DOLLAR, reference)
+//                    .push($ -> new ConstructorNode($.span(), $.$[0]));
+//
+//    public rule simple_type =
+//            identifier
+//                    .push($ -> new SimpleTypeNode($.span(), $.$[0]));
+//
+//    public rule paren_expression = lazy(() ->
+//            seq(LPAREN, this.expression, RPAREN)
+//                    .push($ -> new ParenthesizedNode($.span(), $.$[0])));
 
-    public rule prefixOp = choice(
+    public rule expressions = lazy(() ->
+            this.expression.sep(0, COMMA)
+                    .as_list(ExpressionNode.class));
+
+    public rule array =
+            seq(LSQUARE, expressions, RSQUARE)
+                    .push($ -> new ArrayLiteralNode($.span(), $.$[0]));
+
+    public rule basic_expression = choice(
+//            constructor,
+            reference,
+            floating,
+            integer,
+            reserved_lit,
+            string,
+//            paren_expression,
+            array);
+
+    public rule function_args =
+            seq(LPAREN, expressions, RPAREN);
+
+    public rule suffix_expression = left_expression()
+            .left(basic_expression)
+//            .suffix(seq(DOT, identifier),
+//                    $ -> new FieldAccessNode($.span(), $.$[0], $.$[1]))
+            .suffix(seq(LSQUARE, lazy(() -> this.expression), RSQUARE),
+                    $ -> new ArrayAccessNode($.span(), $.$[0], $.$[1]))
+            .suffix(function_args,
+                    $ -> new FunCallNode($.span(), $.$[0], $.$[1]));
+
+    public rule prefix_op = choice(
             MINUS   .as_val(NEG),
-            EXCLAM  .as_val(NOT));
-    public rule multOp = choice(
-            MUL     .as_val(MULTIPLY),
-            DIV     .as_val(DIVIDE),
-            MOD     .as_val(MODULO));
-    public rule addOp = choice(
-            PLUS    .as_val(ADD),
-            MINUS   .as_val(SUBTRACT));
-    public rule eqOp = choice(
-            LTEQ    .as_val(LESS_OR_EQUAL),
-            GTEQ    .as_val(GREATER_OR_EQUAL),
-            LT      .as_val(LESS_THAN),
-            GT      .as_val(GREATER_THAN),
-            NEQ     .as_val(NOT_EQUAL),
-            EQEQ    .as_val(EQUAL));
+            BANG    .as_val(NOT));
 
-    public rule prefixExpression = right_expression()
-            .prefix(prefixOp, pushUnaryExpression)
-            .right(value);
+    public rule prefix_expression = right_expression()
+            .operand(suffix_expression)
+            .prefix(prefix_op,
+                    $ -> new UnaryExpressionNode($.span(), $.$[0], $.$[1]));
 
-    public rule multiplicationExpression = left_expression()
-            .operand(prefixExpression)
-            .infix(multOp, pushBinaryExpression);
+    public rule mult_op = choice(
+            STAR         .as_val(BinaryOperator.MULTIPLY),
+            SLASH        .as_val(BinaryOperator.DIVIDE),
+            PERCENT      .as_val(BinaryOperator.REMAINDER));
 
-    public rule additionExpression = left_expression()
-            .operand(multiplicationExpression)
-            .infix(addOp, pushBinaryExpression);
+    public rule add_op = choice(
+            PLUS         .as_val(BinaryOperator.ADD),
+            MINUS        .as_val(BinaryOperator.SUBTRACT));
 
-    public rule eqExpression = left_expression()
-            .operand(additionExpression)
-            .infix(eqOp, pushBinaryExpression);
+    public rule cmp_op = choice(
+            EQUALS_EQUALS.as_val(BinaryOperator.EQUALITY),
+            BANG_EQUAL   .as_val(BinaryOperator.NOT_EQUALS),
+            LANGLE_EQUAL .as_val(BinaryOperator.LOWER_EQUAL),
+            RANGLE_EQUAL .as_val(BinaryOperator.GREATER_EQUAL),
+            LANGLE       .as_val(BinaryOperator.LOWER),
+            RANGLE       .as_val(BinaryOperator.GREATER));
 
-    public rule logicAndExpression = left_expression()
-            .operand(eqExpression)
-            .infix(AMPAMP.as_val(AND), pushBinaryExpression);
+    public rule mult_expr = left_expression()
+            .operand(prefix_expression)
+            .infix(mult_op,
+                    $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule logicOrExpression = left_expression()
-            .operand(logicAndExpression)
-            .infix(BARBAR.as_val(OR), pushBinaryExpression);
+    public rule add_expr = left_expression()
+            .operand(mult_expr)
+            .infix(add_op,
+                    $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule logicExpression = logicOrExpression;
+    public rule order_expr = left_expression()
+            .operand(add_expr)
+            .infix(cmp_op,
+                    $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule arrayMapAccessExpression = lazy(() -> seq(identifier, OPENBRACKET, this.expression, CLOSEBRACKET))
-            .push($ -> new ArrayMapAccessNode($.span(), $.$0(), $.$1()));
+    public rule and_expression = left_expression()
+            .operand(order_expr)
+            .infix(AMP_AMP.as_val(BinaryOperator.AND),
+                    $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule expression = lazy(() -> choice(this.functionCallExpression, arrayMapAccessExpression, logicExpression));
+    public rule or_expression = left_expression()
+            .operand(and_expression)
+            .infix(BAR_BAR.as_val(BinaryOperator.OR),
+                    $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule returnStatement = seq(_return, expression)
-            .push($ -> new ReturnStatementNode($.span(), $.$0()));
+    public rule expression =
+            choice(or_expression);
 
-    // Simple statements
-    public rule variableDefinition = seq(choice(arrayMapAccessExpression, identifier), EQ, expression)
-            .push($ -> new AssignmentNode($.span(), $.$0(), $.$1()));
+    public rule expression_stmt =
+            expression
+                    .filter($ -> {
+                        if ($.$[0] instanceof FunCallNode) {
+                            $.push(new ExpressionStatementNode($.span(), $.$[0]));
+                            return true;
+                        } else if ($.$[0] instanceof AssignmentNode) { // TODO still needed ? clean up
+                            $.push($.$[0]);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
 
-    public rule block = lazy(() -> seq(OPENBRACE, this.statement.at_least(0), CLOSEBRACE));
+//    public rule array_type = left_expression()
+//            .left(simple_type)
+//            .suffix(seq(LSQUARE, RSQUARE),
+//                    $ -> new ArrayTypeNode($.span(), $.$[0]));
+//
+//    public rule type =
+//            seq(array_type);
+
+    public rule assignment_stmt = left_expression()
+            .left(seq(reference, array.or_push_null())) // TODO complete with idexer_accss ??
+            .infix(EQUALS)
+            .right(expression)
+            .requireOperator()
+            .push($ -> new AssignmentNode($.span(),
+                    $.$[1]==null ? $.$[0] : new ArrayAccessNode($.span(), $.$[0], $.$[1]),
+                    $.$[2]));
 
     public rule statement = lazy(() -> choice(
-            block,
-            variableDefinition,
-            this.ifStatement,
-            this.whileStatement,
-            this.functionStatement));
+            this.block,
+//            this.var_decl,
+            this.fun_decl,
+//            this.struct_decl,
+            this.if_stmt,
+            this.while_stmt,
+            this.return_stmt,
+            this.assignment_stmt,
+            this.expression_stmt));
 
-    public rule statementBody = seq(statement.at_least(0), returnStatement.opt())
-            .push($ -> $.$list());
+    public rule statements =
+            statement.at_least(0)
+                    .as_list(StatementNode.class);
 
-    public rule ifStatement = seq(_if, logicExpression, OPENBRACE, statementBody, CLOSEBRACE, seq(_else, statementBody).or_push_null())
-            .push($ -> new IfStatementNode($.span(), $.$0(), $.$1(), $.$2()));
+    public rule block =
+            seq(LBRACE, statements, RBRACE)
+                    .push($ -> new BlockNode($.span(), $.$[0]));
 
-    public rule whileStatement = seq(_while, logicExpression, OPENBRACE, statementBody, CLOSEBRACE)
-            .push($ -> new WhileStatementNode($.span(), $.$0(), $.$1()));
+//    public rule var_decl =
+//            seq(_var, identifier, COLON, type, EQUALS, expression)
+//                    .push($ -> new VarDeclarationNode($.span(), $.$[0], $.$[1], $.$[2]));
 
+    public rule parameter =
+            seq(identifier)//, COLON, type)
+                    .push($ -> new ParameterNode($.span(), $.$[0]/*, $.$[1]*/));
 
-    // Function
-    public rule functionParameter = identifier.push($ -> new FunctionParameterNode($.span(), $.$0()));
+    public rule parameters =
+            parameter.sep(0, COMMA)
+                    .as_list(ParameterNode.class);
 
-    public rule functionParameters = seq(OPENPARENT, functionParameter.sep(0, COMMA), CLOSEPARENT)
-            .push($ -> $.$list());
+//    public rule maybe_return_type =
+//            seq(COLON, type).or_push_null();
 
-    public rule functionArguments = seq(OPENPARENT, expression.sep(0, COMMA), CLOSEPARENT)
-            .push($ -> new FunctionArgumentsNode($.span(), $.$list()));
+    public rule fun_decl =
+            seq(_fun, identifier, LPAREN, parameters, RPAREN, /*maybe_return_type, */block)
+                    .push($ -> new FunDeclarationNode($.span(), $.$[0], $.$[1], /*$.$[2], */$.$[2]));
 
-    public rule functionHeader = seq(_fun, identifier, functionParameters)
-            .push($ -> new FunctionStatementNode($.span(), $.$0(), $.$1()));
+//    public rule field_decl =
+//            seq(_var, identifier, COLON, type)
+//                    .push($ -> new FieldDeclarationNode($.span(), $.$[0], $.$[1]));
+//
+//    public rule struct_body =
+//            seq(LBRACE, field_decl.at_least(0).as_list(DeclarationNode.class), RBRACE);
+//
+//    public rule struct_decl =
+//            seq(_struct, identifier, struct_body)
+//                    .push($ -> new StructDeclarationNode($.span(), $.$[0], $.$[1]));
 
-    public rule functionMainHeader = seq(_fun, _main,
-            OPENPARENT, word("args").as_val(str("args")), CLOSEPARENT)
-            .push($ -> new FunctionStatementNode(
-                    $.span(),
-                    new IdentifierNode($.span(), $.$0()),
-                    Arrays.asList( new FunctionParameterNode($.span(), new IdentifierNode($.span(), "args")) )));
+    public rule if_stmt =
+            seq(_if, expression, statement, seq(_else, statement).or_push_null())
+                    .push($ -> new IfNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule functionStatement = seq(choice(functionMainHeader, functionHeader), OPENBRACE, statementBody, CLOSEBRACE)
-            .push($ -> ((FunctionStatementNode) $.$0()).setStatements($.$1()));
+    public rule while_stmt =
+            seq(_while, expression, statement)
+                    .push($ -> new WhileNode($.span(), $.$[0], $.$[1]));
 
-    public rule functionCallExpression = seq(identifier, functionArguments)
-            .push($ -> new FunctionCallNode($.span(),$.$0(), $.$1()));
+    public rule return_stmt =
+            seq(_return, expression.or_push_null())
+                    .push($ -> new ReturnNode($.span(), $.$[0]));
 
-    // Class
-    public rule classBody = seq(OPENBRACE, functionStatement.at_least(0), CLOSEBRACE)
-            .push($ -> new ClassStatementNode($.span(),$.$list()));
+    public rule klass =
+            seq(_class, identifier, LBRACE, fun_decl.at_least(0).as_list(FunDeclarationNode.class), RBRACE)
+                    .push($ -> new ClassNode($.span(), $.$[0], $.$[1]));
 
-    public rule classStatement = seq(_class, identifier, classBody)
-            .push($ -> ((ClassStatementNode) $.$1()).setIdentifier($.$0()));
+    public rule root =
+            seq(ws, klass);
 
-    // ROOT
-    public rule root = seq(ws, classStatement);
-
-    @Override public rule root() {
+    @Override public rule root () {
         return root;
     }
-
-    /**
-    public ParseResult parse (String input) {
-        ParseResult result = Autumn.parse(root, input, ParseOptions.get());
-        if (result.fullMatch) {
-            System.out.println(result.toString());
-        } else {
-            // debugging
-            System.out.println(result.toString(new LineMapString(input), false, "<input>"));
-            // for users
-            System.out.println(result.userErrorString(new LineMapString(input), "<input>"));
-        }
-        return result;
-    }
-    */
 }

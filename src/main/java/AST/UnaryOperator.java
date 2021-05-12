@@ -1,6 +1,13 @@
-package AST;
+package ast;
 
-public enum UnaryOperator {
-    NEG,
-    NOT
+public enum UnaryOperator
+{
+    NOT("!"),
+    NEG("-");
+
+    public final String string;
+
+    UnaryOperator (String string) {
+        this.string = string;
+    }
 }

@@ -1,17 +1,24 @@
-package AST;
+package ast;
 
-public enum BinaryOperator {
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    MODULO,
-    AND,
-    OR,
-    EQUAL,
-    NOT_EQUAL,
-    LESS_THAN,
-    GREATER_THAN,
-    LESS_OR_EQUAL,
-    GREATER_OR_EQUAL
+public enum BinaryOperator
+{
+    MULTIPLY("*"),
+    DIVIDE("/"),
+    REMAINDER("%"),
+    ADD("+"),
+    SUBTRACT("-"),
+    EQUALITY("=="),
+    NOT_EQUALS("!="),
+    GREATER(">"),
+    LOWER("<"),
+    GREATER_EQUAL(">="),
+    LOWER_EQUAL("<="),
+    AND("&&"),
+    OR("||");
+
+    public final String string;
+
+    BinaryOperator (String string) {
+        this.string = string;
+    }
 }

@@ -1,6 +1,5 @@
-package ast_new;
+package ast;
 
-import AST.ClassStatementNode;
 import norswap.autumn.positions.Span;
 import norswap.utils.Util;
 import java.util.List;

@@ -1,17 +1,28 @@
-package AST;
+package ast;
 
 import norswap.autumn.positions.Span;
+import norswap.utils.Util;
 
-public class BinaryExpressionNode extends ExpressionNode {
-    public BinaryOperator operator;
-    public ASTNode leftChild;
-    public ASTNode rightChild;
+public final class BinaryExpressionNode extends ExpressionNode
+{
+    public final ExpressionNode left, right;
+    public final BinaryOperator operator;
 
-    public BinaryExpressionNode(Span span, ASTNode leftChild, BinaryOperator operator, ASTNode rightChild) {
+    public BinaryExpressionNode (Span span, Object left, Object operator, Object right) {
         super(span);
-        this.operator = operator;
-        this.leftChild = leftChild;
-        this.rightChild = rightChild;
+        this.left = Util.cast(left, ExpressionNode.class);
+        this.right = Util.cast(right, ExpressionNode.class);
+        this.operator = Util.cast(operator, BinaryOperator.class);
+    }
+
+    @Override public String contents ()
+    {
+        String candidate = String.format("%s %s %s",
+                left.contents(), operator.string, right.contents());
+
+        return candidate.length() <= contentsBudget()
+                ? candidate
+                : String.format("(?) %s (?)", operator.string);
     }
 
     @Override
@@ -19,24 +30,13 @@ public class BinaryExpressionNode extends ExpressionNode {
         if (getClass()  != obj.getClass())
             return false;
         BinaryExpressionNode other = (BinaryExpressionNode) obj;
-        return
-                this.operator.equals(other.operator) &&
-                this.leftChild.equals(other.leftChild) &&
-                this.rightChild.equals(other.rightChild);
-    }
-
-    @Override public String contents ()
-    {
-        String candidate = String.format("%s %s %s",
-                leftChild.contents(), operator, rightChild.contents());
-
-        return candidate.length() <= contentsBudget()
-                ? candidate
-                : String.format("(?) %s (?)", operator);
+        return this.operator.equals(other.operator)
+                && this.left.equals(other.left)
+                && this.right.equals(other.right);
     }
 
     @Override
-    public String toString() {
-        return "BinaryExpressionNode:" + leftChild + operator + rightChild;
+    public String toString () {
+        return "BinaryExpression:" + left + operator + right;
     }
 }

@@ -1,15 +1,25 @@
-package AST;
+package ast;
 
 import norswap.autumn.positions.Span;
+import norswap.utils.Util;
 
-public class UnaryExpressionNode extends ExpressionNode {
-    public UnaryOperator operator;
-    public ExpressionNode operand;
+public final class UnaryExpressionNode extends ExpressionNode
+{
+    public final ExpressionNode operand;
+    public final UnaryOperator operator;
 
-    public UnaryExpressionNode(Span span, UnaryOperator operator, ExpressionNode operand) {
+    public UnaryExpressionNode (Span span, Object operator, Object operand) {
         super(span);
-        this.operator = operator;
-        this.operand = operand;
+        this.operand = Util.cast(operand, ExpressionNode.class);
+        this.operator = Util.cast(operator, UnaryOperator.class);
+    }
+
+    @Override public String contents ()
+    {
+        String candidate = operator.string + operand.contents();
+        return candidate.length() <= contentsBudget()
+                ? candidate
+                : operator.string + "(?)";
     }
 
     @Override
@@ -17,22 +27,12 @@ public class UnaryExpressionNode extends ExpressionNode {
         if (getClass()  != obj.getClass())
             return false;
         UnaryExpressionNode other = (UnaryExpressionNode) obj;
-        return
-                this.operator.equals(other.operator) &&
-                this.operand.equals(other.operand);
+        return this.operand.equals(other.operand)
+                && this.operator.equals(other.operator);
     }
 
     @Override
-    public String toString() {
-        return "UnaryExpressionNode:" + operator + operand;
-    }
-
-    /**
-     * Returns a <b>brief</b> overview of the content of the node, suitable to be printed
-     * in a single line.
-     */
-    @Override
-    public String contents() {
-        return this.toString();
+    public String toString () {
+        return "UnaryExpression:" + operator + operand;
     }
 }
