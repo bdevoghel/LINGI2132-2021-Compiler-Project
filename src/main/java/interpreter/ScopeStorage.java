@@ -1,6 +1,6 @@
 package interpreter;
 
-import scopes.ClassScope;
+import scopes.RootScope;
 import scopes.Scope;
 import java.util.HashMap;
 
@@ -64,11 +64,13 @@ public final class ScopeStorage
     /**
      * To be called on the root frame to initialize its variables.
      */
-    void initRoot(ClassScope root)
+    void initRoot(RootScope root)
     {
         set(root, root._true  .name(), true);
         set(root, root._false .name(), false);
         set(root, root._null  .name(), Null.INSTANCE);
+
+        // TODO to complete with our own ??
 
         // Function and types are not assigned values in frames - instead they derive
         // their runtime value values from the corresponding DeclarationNode.
