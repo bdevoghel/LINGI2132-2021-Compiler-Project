@@ -13,7 +13,7 @@ class Sort {
             j = i+1
             while j < len(numbers) {
                 if numbers[i] > numbers[j] {
-                    _ = swap(numbers, i, j)
+                    swap(numbers, i, j)
                 }
                 j = j + 1
             }
@@ -29,12 +29,11 @@ class Sort {
             numbers[i] = int(args[i])
             i = i + 1
         }
-        _ = sort(numbers)
+        sort(numbers)
         i = 0
         while i < len(numbers) {
-            _ = print(numbers[i])
+            print(numbers[i])
             i = i + 1
         }
-        return 0
     }
 }

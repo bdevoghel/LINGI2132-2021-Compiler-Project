@@ -7,16 +7,12 @@ class Fibonacci {
         if N == 0 {
             return null // end of recursion
         }
-        _ = print(a)
+        print(a)
         return fibonacci(b, a+b, N-1)
     }
 
     fun main(args) {
         N = int(args[0])
-        // _ = fibonacci(0, 1, N)
-        zero = 0
-        one = 1
-        _ = fibonacci(zero, one, N)
-        return 0
+        fibonacci(0, 1, N)
     }
 }

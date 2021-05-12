@@ -5,11 +5,10 @@ class Uniq {
         i = 0
         while i < len(args) {
             if m[args[i]] == null {
-                _ = print(args[i])
+                print(args[i])
                 m[args[i]] = true
             }
             i = i + 1
         }
-        return 0
     }
 }
