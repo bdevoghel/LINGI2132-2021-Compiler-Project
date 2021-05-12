@@ -1,10 +1,10 @@
-package scopes_new;
+package scopes;
 
-import ast_new.ClassNode;
-import types_new.Type;
+import ast.ClassNode;
+import types.Type;
 import norswap.uranium.Reactor;
 
-import static scopes_new.DeclarationKind.*;
+import static scopes.DeclarationKind.*;
 
 /**
  * The lexical scope of a file in Sigh. It is notably responsible for introducing the default
@@ -37,16 +37,20 @@ public final class RootScope extends Scope
     public final SyntheticDeclarationNode _null  = decl("null",  VARIABLE);
 
     // root scope functions
-    public final SyntheticDeclarationNode print = decl("print", FUNCTION);
+    public final SyntheticDeclarationNode _print     = decl("print", FUNCTION);
+    public final SyntheticDeclarationNode _int       = decl("int", FUNCTION);
+    public final SyntheticDeclarationNode _len       = decl("len", FUNCTION);
+    public final SyntheticDeclarationNode _makeDict  = decl("makeDict", FUNCTION);
+    public final SyntheticDeclarationNode _makeArray = decl("makeArray", FUNCTION);
     // TODO select ours
-//    public final SyntheticDeclarationNode println = decl("println", FUNCTION);
-//    public final SyntheticDeclarationNode sort    = decl("sort",    FUNCTION);
-//    public final SyntheticDeclarationNode range   = decl("range",   FUNCTION);
-//    public final SyntheticDeclarationNode indexer = decl("indexer", FUNCTION);
-//    public final SyntheticDeclarationNode open    = decl("open",    FUNCTION);
-//    public final SyntheticDeclarationNode close   = decl("close",   FUNCTION);
-//    public final SyntheticDeclarationNode read    = decl("read",    FUNCTION);
-//    public final SyntheticDeclarationNode write   = decl("write",   FUNCTION);
+//    public final SyntheticDeclarationNode println    = decl("println", FUNCTION);
+//    public final SyntheticDeclarationNode sort       = decl("sort",    FUNCTION);
+//    public final SyntheticDeclarationNode range      = decl("range",   FUNCTION);
+//    public final SyntheticDeclarationNode indexer    = decl("indexer", FUNCTION);
+//    public final SyntheticDeclarationNode open       = decl("open",    FUNCTION);
+//    public final SyntheticDeclarationNode close      = decl("close",   FUNCTION);
+//    public final SyntheticDeclarationNode read       = decl("read",    FUNCTION);
+//    public final SyntheticDeclarationNode write      = decl("write",   FUNCTION);
 
     // ---------------------------------------------------------------------------------------------
 
@@ -72,7 +76,11 @@ public final class RootScope extends Scope
         reactor.set(_false, "type",       Type.BOOLEAN);
         reactor.set(_null,  "type",       Type.NULL);
 
-        reactor.set(print,  "type",       Type.FUNCTION);
+        reactor.set(_print,  "type",       Type.FUNCTION);
+        reactor.set(_int,    "type",       Type.FUNCTION);
+        reactor.set(_len,    "type",       Type.FUNCTION);
+        reactor.set(_makeDict,"type",       Type.FUNCTION);
+        reactor.set(_makeArray,"type",       Type.FUNCTION);
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -1,10 +1,12 @@
 package scopes;
 
-import AST.DeclarationNode;
-import AST.ASTNode;
-
+import ast.DeclarationNode;
+import ast.KneghelNode;
 import java.util.HashMap;
 
+/**
+ * Represent a lexical scope in which declarations occurs.
+ */
 public class Scope
 {
     // ---------------------------------------------------------------------------------------------
@@ -12,7 +14,7 @@ public class Scope
     /**
      * The AST node that introduces this scope.
      */
-    public final ASTNode node;
+    public final KneghelNode node;
 
     /**
      * The parent of this scope, which is the inermost lexically enclosing scope.
@@ -21,11 +23,11 @@ public class Scope
 
     // ---------------------------------------------------------------------------------------------
 
-    public final HashMap<String, DeclarationNode> declarations = new HashMap<>();
+    private final HashMap<String, DeclarationNode> declarations = new HashMap<>();
 
     // ---------------------------------------------------------------------------------------------
 
-    public Scope (ASTNode node, Scope parent) {
+    public Scope (KneghelNode node, Scope parent) {
         this.node = node;
         this.parent = parent;
     }

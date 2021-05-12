@@ -1,12 +1,13 @@
 package semantic;
 
-import AST.ASTNode;
+import ast.*;
+import grammar.KneghelGrammar;
+
 import norswap.autumn.AutumnTestFixture;
 import norswap.autumn.positions.LineMapString;
 import norswap.uranium.Reactor;
 import norswap.uranium.UraniumTestFixture;
 import norswap.utils.visitors.Walker;
-import grammar.KneghelGrammar;
 import org.testng.annotations.Test;
 
 
@@ -32,15 +33,30 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
     @Override
     protected String astNodeToString(Object ast) {
         LineMapString map = new LineMapString("<test>", input);
-        return ast.toString() + " (" + ((ASTNode) ast).span.startString(map) + ")";
+        return ast.toString() + " (" + ((KneghelNode) ast).span.startString(map) + ")";
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Override
     protected void configureSemanticAnalysis(Reactor reactor, Object ast) {
-        Walker<ASTNode> walker = SemanticAnalysis.createWalker(reactor);
-        walker.walk(((ASTNode) ast));
+        Walker<KneghelNode> walker = SemanticAnalysis.createWalker(reactor);
+        walker.walk(((KneghelNode) ast));
+    }
+
+    @Test
+    public void testClass() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Hello { fun World() {} }");
+    }
+
+    @Test
+    public void testFunctions() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Hello { fun World() {a=1} }");
+        successInput("class Hello { fun World(a, b) {return a} }");
+        successInput("class Hello { fun World(a, b) {return a} fun main(args) {World(1, 2)} }");
+        successInput("class Hello { fun World(a) {return a+1} fun main(args) {a=2 return World(a)} }");
     }
 
     @Test
@@ -52,8 +68,8 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
     }
 
     @Test
-    public void testDouble() {
-        autumnFixture.rule = grammar.doub;
+    public void testFloating() {
+        autumnFixture.rule = grammar.floating;
         successInput("5.");
         successInput("5.0");
         successInput("5.6e10");
@@ -63,9 +79,10 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
 
     @Test
     public void testBool() {
-        autumnFixture.rule = grammar.bool;
+        autumnFixture.rule = grammar.reserved_lit;
         successInput("true");
         successInput("false");
+        successInput("null");
     }
 
     @Test
@@ -77,7 +94,7 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
 
     @Test
     public void testBinaryExpression() {
-        autumnFixture.rule = grammar.additionExpression;
+        autumnFixture.rule = grammar.add_expr;
         successInput("1 + 2");
         successInput("1 * 2");
         successInput("1 + 2 + 3 - 4");
@@ -114,35 +131,80 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
         failureInput("class A { fun b(x) {r= x + true} }");
         failureInput("class A { fun b(x) {r= true * x} }");
         failureInput("class A { fun b(x) {r= true + x} }");
-        failureInput("class A { fun b(x) {r= \"a\" + x} }");
+        successInput("class A { fun b(x) {r= \"a\" + x} }");
         failureInput("class A { fun b(x) {r= \"a\" * x} }");
-//        successInput("\"a\" + 1"); // TODO to allow see TODO in arithmetic
-//        failureInput("1 + a"); //TODO JE NE SAIS PAS COMMENT FAIRE DES FAILURES
+
+        successInput("class A { fun b(x) {r= 1 + x} }");
+        failureInput("class A { fun b(x) {r= 1 + a} }");
     }
 
     @Test
     public void testUnaryExpression() {
-        autumnFixture.rule = grammar.prefixExpression;
-        successInput("-1");
-        successInput("!true");
+        autumnFixture.rule = grammar.prefix_expression;
+        successInput("- 1");
+        failureInput("- true");
+        successInput("! true");
+        failureInput("! 1");
         successInput("- 2.0");
     }
 
+    @Test
+    public void testComparison() {
+        autumnFixture.rule = grammar.expression;
+        successInput("1 > 1");
+        successInput("1 >= 1");
+        successInput("1 < 1");
+        successInput("1 <= 1");
+        successInput("1 == 1");
+        successInput("1 != 1");
+        failureInput("true > 1");
+        failureInput("true >= 1");
+        failureInput("true < 1");
+        failureInput("true <= 1");
+        successInput("true == 42");
+        successInput("true != 42");
+        failureInput("true > false");
+        failureInput("true >= false");
+        failureInput("true < false");
+        failureInput("true <= false");
+        successInput("true == false");
+        successInput("true != false");
+        failureInput("\"a\" > 1");
+        failureInput("\"a\" >= 1");
+        failureInput("\"a\" < 1");
+        failureInput("\"a\" <= 1");
+        failureInput("\"a\" == 1");
+        failureInput("\"a\" != 1");
+        failureInput("null > 1");
+        failureInput("null >= 1");
+        failureInput("null < 1");
+        failureInput("null <= 1");
+        failureInput("null == 1");
+        failureInput("null != 1");
+        successInput("\"a\" > \"b\"");
+        successInput("\"a\" >= \"b\"");
+        successInput("\"a\" < \"b\"");
+        successInput("\"a\" <= \"b\"");
+        successInput("\"a\" == \"b\"");
+        successInput("\"a\" != \"b\"");
+    }
 
     @Test
     public void testIfStatement() {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { fun bar() {if true {a = 1+2}} }");
         successInput("class Foo { fun bar() {if true { a=2 } else { a=3 }} }");
+        successInput("class Foo { fun bar(a) {if a { print(a) } }}");
         successInput("class Foo { fun bar(a) {if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }} }");
-        successInput("class Foo { fun bar(a, b) {if b == 2 { _ = print(a) } }}");
+        successInput("class Foo { fun bar(a, b) {if b == 2 { print(a) } }}");
     }
 
     @Test
     public void testWhileStatement() {
         autumnFixture.rule = grammar.root;
         successInput("class Foo { fun bar(a, b) {while a > 2 { a = a - b } }}");
-        successInput("class Foo { fun bar(b) {while true { a = b + 1 } return a} }");
+        failureInput("class Foo { fun bar(b) {while true { a = a + b } return a} }");
+        successInput("class Foo { fun bar(b) {a = 0 while true { a = a + b } return a} }");
         successInput("class Foo { fun bar(a, b, c) {while a == b { c = b + 2 - a} }}");
         successInput("class Foo { fun bar() {a = 0 b = 1 while true {  a = b+1}} }");
         failureInput("class Foo { fun bar() {while true { a = true + 1}} }");
@@ -155,11 +217,13 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
         successInput("class Foo { }");
         successInput("class Foo { fun bar() {} }");
         successInput("class Foo { fun bar() {a=1} }");
+        successInput("class Foo { fun bar(a) {b = a[0] return b} }");
         successInput("class Foo { fun bar(a) {a[0]=1} }");
+        successInput("class Foo { fun bar(a, b, c) {a[c]=1 return b[c]} }");
         successInput("class Foo { fun bar() {a=1 return a} fun fuzz(a) {return a} }");
         successInput("class Foo { fun bar() {a = 1 + 2 return a} }");
-        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_=bar() _=fuzz(a)} }");
-        failureInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {_=bar(b) _=fuzz(a)} }");
+        successInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {bar() fuzz(args[0])} }");
+        failureInput("class Foo { fun bar() {a = 1 + 2 return a} fun fuzz(a) {return a} fun main(args) {bar(b) fuzz(args[0])} }");
     }
 
     @Test

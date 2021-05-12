@@ -1,7 +1,10 @@
 package scopes;
 
-import AST.DeclarationNode;
+import ast.DeclarationNode;
 
+/**
+ * A pair of a {@link Scope} and a {@link DeclarationNode} declaring an entry in that scope.
+ */
 public final class DeclarationContext
 {
     public final Scope scope;

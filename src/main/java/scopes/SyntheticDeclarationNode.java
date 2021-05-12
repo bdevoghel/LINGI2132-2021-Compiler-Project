@@ -1,7 +1,6 @@
 package scopes;
 
-import AST.DeclarationNode;
-
+import ast.DeclarationNode;
 import java.util.Locale;
 
 /**
@@ -9,7 +8,7 @@ import java.util.Locale;
  * A {@code SyntheticDeclarationNode} is such a node for declarations that have not been
  * introduced by the user.
  *
- * <p>At present, all such declarations are unconditionally introduced in the {@link ClassScope}.
+ * <p>At present, all such declarations are unconditionally introduced in the {@link RootScope}.
  */
 public final class SyntheticDeclarationNode extends DeclarationNode
 {
