@@ -1,6 +1,6 @@
 package examples;
 
-import AST.*;
+import ast.*;
 import norswap.autumn.AutumnTestFixture;
 import norswap.autumn.positions.LineMapString;
 import norswap.uranium.Reactor;
@@ -36,13 +36,13 @@ public class KneghelExamplesSemanticTests extends UraniumTestFixture {
     @Override
     protected String astNodeToString(Object ast) {
         LineMapString map = new LineMapString("<test>", input);
-        return ast.toString() + " (" + ((ASTNode) ast).span.startString(map) + ")";
+        return ast.toString() + " (" + ((KneghelNode) ast).span.startString(map) + ")";
     }
 
     @Override
     protected void configureSemanticAnalysis(Reactor reactor, Object ast) {
-        Walker<ASTNode> walker = SemanticAnalysis.createWalker(reactor);
-        walker.walk(((ASTNode) ast));
+        Walker<KneghelNode> walker = SemanticAnalysis.createWalker(reactor);
+        walker.walk(((KneghelNode) ast));
     }
 
 
