@@ -2,6 +2,8 @@ package interpreter;
 
 import scopes.RootScope;
 import scopes.Scope;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -64,11 +66,17 @@ public final class ScopeStorage
     /**
      * To be called on the root frame to initialize its variables.
      */
-    void initRoot(RootScope root)
-    {
+    void initRoot(RootScope root) {
+        initRoot(root, new ArrayList<String>());
+    }
+
+    void initRoot(RootScope root, ArrayList<String> args)
+        {
         set(root, root._true  .name(), true);
         set(root, root._false .name(), false);
         set(root, root._null  .name(), Null.INSTANCE);
+
+        set(root, root._args  .name(), args);
 
         // TODO to complete with our own ??
 
