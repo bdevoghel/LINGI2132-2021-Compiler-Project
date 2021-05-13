@@ -195,7 +195,7 @@ public final class Interpreter
             return convertToString(left) + convertToString(right);
 
         boolean floating = leftType == FLOAT || rightType == FLOAT;
-        boolean numeric  = floating || leftType == INTEGER || (leftType == UNKNOWN_TYPE && rightType != STRING && rightType != BOOLEAN);
+        boolean numeric  = floating || leftType == INTEGER || (leftType == UNKNOWN_TYPE && rightType != STRING && rightType != BOOLEAN && rightType != NULL);
 
         if (numeric)
             return numericOp(node, floating, (Number) left, (Number) right);
@@ -498,7 +498,11 @@ public final class Interpreter
             case "dictGet":
                 HashMap dicG = (HashMap) args[0];
                 Object keyG = args[1];
-                return dicG.get(keyG);
+                Object dicReturn = dicG.get(keyG);
+                if (dicReturn == null) {
+                    return Null.INSTANCE;
+                }
+                return dicReturn;
             case "len":
                 if (args[0] instanceof ArrayList)
                     return ((ArrayList<?>) args[0]).size();

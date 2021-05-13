@@ -150,15 +150,16 @@ public class KneghelExamplesInterpreterTests extends TestFixture {
     public void testUniq() {
         rule = grammar.root;
         check(readFile("Uniq.kneghel"),
-                new ArrayList() {{
-                    add(1);
-                    add(3);
-                    add(5); }},
+//                new ArrayList() {{
+//                    add(1);
+//                    add(3);
+//                    add(5); }},
+                null,
                 "1\n3\n5\n",
                 new ArrayList<String>(){{
-                    add("5");
                     add("1");
                     add("3");
+                    add("5");
                 }});
     }
 }
