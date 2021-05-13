@@ -80,7 +80,7 @@ public class KneghelExamplesGrammarTests extends AutumnTestFixture {
                                 ),
                                 new FunDeclarationNode(null,
                                         "main",
-                                        Arrays.asList( new ParameterNode(null, "args")),
+                                        Arrays.asList(),
                                         new BlockNode(null, Arrays.asList(
                                                 new AssignmentNode(null,
                                                         new ReferenceNode(null, "N"),
