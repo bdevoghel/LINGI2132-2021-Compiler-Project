@@ -14,7 +14,7 @@ class Prime {
         return prime
     }
 
-    fun main(args) {
+    fun main() {
         N = int(args[0])
         current = 2
         count = 0

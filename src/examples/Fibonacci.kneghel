@@ -11,7 +11,7 @@ class Fibonacci {
         return fibonacci(b, a+b, N-1)
     }
 
-    fun main(args) {
+    fun main() {
         N = int(args[0])
         fibonacci(0, 1, N)
     }

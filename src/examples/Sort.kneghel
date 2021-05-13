@@ -22,8 +22,8 @@ class Sort {
         return true
     }
 
-    fun main(args) {
-        numbers = makeArray(len(args))
+    fun main() {
+        numbers = makeArray()
         i = 0
         while i < len(args) {
             numbers[i] = int(args[i])
@@ -35,5 +35,6 @@ class Sort {
             print(numbers[i])
             i = i + 1
         }
+        return numbers
     }
 }
