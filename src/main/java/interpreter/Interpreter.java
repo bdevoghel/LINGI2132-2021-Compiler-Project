@@ -70,7 +70,7 @@ public final class Interpreter
         visitor.register(ArrayLiteralNode.class,         this::arrayLiteral);
         visitor.register(ReferenceNode.class,            this::reference);
 //        visitor.register(ConstructorNode.class,          this::constructor);
-//        visitor.register(ParenthesizedNode.class,        this::parenthesized);
+        visitor.register(ParenthesizedNode.class,        this::parenthesized);
 //        visitor.register(FieldAccessNode.class,          this::fieldAccess);
         visitor.register(ArrayAccessNode.class,          this::arrayAccess);
         visitor.register(FunCallNode.class,              this::funCall);
@@ -157,11 +157,11 @@ public final class Interpreter
 
     private Object nullLiteral (NullLiteralNode node) {return Null.INSTANCE;}
 
-//    // ---------------------------------------------------------------------------------------------
-//
-//    private Object parenthesized (ParenthesizedNode node) {
-//        return get(node.expression);
-//    }
+    // ---------------------------------------------------------------------------------------------
+
+    private Object parenthesized (ParenthesizedNode node) {
+        return get(node.expression);
+    }
 
     // ---------------------------------------------------------------------------------------------
 

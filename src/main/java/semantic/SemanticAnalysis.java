@@ -119,7 +119,7 @@ public final class SemanticAnalysis
         walker.register(ReferenceNode.class,            PRE_VISIT,  analysis::reference);
 //        walker.register(ConstructorNode.class,          PRE_VISIT,  analysis::constructor);
         walker.register(ArrayLiteralNode.class,         PRE_VISIT,  analysis::arrayLiteral);
-//        walker.register(ParenthesizedNode.class,        PRE_VISIT,  analysis::parenthesized);
+        walker.register(ParenthesizedNode.class,        PRE_VISIT,  analysis::parenthesized);
 //        walker.register(FieldAccessNode.class,          PRE_VISIT,  analysis::fieldAccess);
         walker.register(ArrayAccessNode.class,          PRE_VISIT,  analysis::arrayAccess);
         walker.register(FunCallNode.class,              PRE_VISIT,  analysis::funCall);
@@ -335,15 +335,15 @@ public final class SemanticAnalysis
                 });
     }
 
-//    // ---------------------------------------------------------------------------------------------
-//
-//    private void parenthesized (ParenthesizedNode node)
-//    {
-//        R.rule(node, "type")
-//                .using(node.expression, "type")
-//                .by(Rule::copyFirst);
-//    }
-//
+    // ---------------------------------------------------------------------------------------------
+
+    private void parenthesized (ParenthesizedNode node)
+    {
+        R.rule(node, "type")
+                .using(node.expression, "type")
+                .by(Rule::copyFirst);
+    }
+
 //    // ---------------------------------------------------------------------------------------------
 //
 //    private void fieldAccess (FieldAccessNode node)

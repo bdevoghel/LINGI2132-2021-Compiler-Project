@@ -121,10 +121,10 @@ public class KneghelGrammar extends Grammar
 //    public rule simple_type =
 //            identifier
 //                    .push($ -> new SimpleTypeNode($.span(), $.$[0]));
-//
-//    public rule paren_expression = lazy(() ->
-//            seq(LPAREN, this.expression, RPAREN)
-//                    .push($ -> new ParenthesizedNode($.span(), $.$[0])));
+
+    public rule paren_expression = lazy(() ->
+            seq(LPAREN, this.expression, RPAREN)
+                    .push($ -> new ParenthesizedNode($.span(), $.$[0])));
 
     public rule expressions = lazy(() ->
             this.expression.sep(0, COMMA)
@@ -141,7 +141,7 @@ public class KneghelGrammar extends Grammar
             integer,
             reserved_lit,
             string,
-//            paren_expression,
+            paren_expression,
             array);
 
     public rule function_args =
@@ -276,8 +276,8 @@ public class KneghelGrammar extends Grammar
 //            seq(COLON, type).or_push_null();
 
     public rule fun_decl =
-            seq(_fun, identifier, LPAREN, parameters, RPAREN, /*maybe_return_type, */block)
-                    .push($ -> new FunDeclarationNode($.span(), $.$[0], $.$[1], /*$.$[2], */$.$[2]));
+            seq(_fun, identifier, LPAREN, parameters, RPAREN, block)
+                    .push($ -> new FunDeclarationNode($.span(), $.$[0], $.$[1], $.$[2]));
 
 //    public rule field_decl =
 //            seq(_var, identifier, COLON, type)
