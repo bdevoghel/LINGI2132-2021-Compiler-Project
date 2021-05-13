@@ -20,6 +20,9 @@ import norswap.utils.data.wrappers.Pair;
 import norswap.utils.visitors.Walker;
 
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -61,18 +64,25 @@ public final class InterpreterTests extends TestFixture {
     // ---------------------------------------------------------------------------------------------
 
     private void check (rule rule, String input, Object expectedReturn, String expectedOutput) {
+        check(rule, input, expectedReturn, expectedOutput, null);
+    }
+
+    private void check (rule rule, String input, Object expectedReturn, String expectedOutput, ArrayList<String> args) {
         // TODO
         // (1) write proper parsing tests
         // (2) write some kind of automated runner, and use it here
 
         autumnFixture.rule = rule;
         ParseResult parseResult = autumnFixture.success(input);
-        Object o = parseResult.topValue();
-        KneghelNode root = (KneghelNode) o;
+        KneghelNode root = parseResult.topValue();
 
         Reactor reactor = new Reactor();
-        Walker<KneghelNode> walker = SemanticAnalysis.createWalker(reactor);
-        Interpreter interpreter = new Interpreter(reactor);
+        Walker<KneghelNode> walker = args == null
+                ? SemanticAnalysis.createWalker(reactor)
+                : SemanticAnalysis.createWalker(reactor, args);
+        Interpreter interpreter = args == null
+                ? new Interpreter(reactor)
+                : new Interpreter(reactor, args);
         walker.walk(root);
         reactor.run();
         Set<SemanticError> errors = reactor.errors();
@@ -89,21 +99,50 @@ public final class InterpreterTests extends TestFixture {
 
         Pair<String, Object> result = IO.captureStdout(() -> interpreter.interpret(root));
         assertEquals(result.b, expectedReturn);
-        if (expectedOutput != null) assertEquals(result.a, expectedOutput);
+        if (expectedOutput != null)
+            assertEquals(result.a.replaceAll("\r\n", "\n"), expectedOutput);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     private void checkExpr (String input, Object expectedReturn, String expectedOutput) {
-//        rule = grammar.root;
-        check(input, expectedReturn, expectedOutput);
+        rule = grammar.root;
+        check("class generic { fun main(args) {return " + input + "}}", expectedReturn, expectedOutput);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     private void checkExpr (String input, Object expectedReturn) {
-//        rule = grammar.return_stmt;
-        check(input, expectedReturn);
+        rule = grammar.root;
+        check("class generic { fun main(args) {return " + input + "}}", expectedReturn);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void checkStmts (String input, Object expectedReturn, String expectedOutput) {
+        rule = grammar.root;
+        check("class generic { fun main(args) {" + input + "}}", expectedReturn, expectedOutput);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void checkStmts (String input, Object expectedReturn) {
+        rule = grammar.root;
+        check("class generic { fun main(args) {" + input + "}}", expectedReturn);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void checkFunctions (String input, Object expectedReturn, String expectedOutput) {
+        rule = grammar.root;
+        check("class generic {" + input + "}", expectedReturn, expectedOutput);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void checkFunctions (String input, Object expectedReturn) {
+        rule = grammar.root;
+        check("class generic {" + input + "}", expectedReturn);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -114,14 +153,19 @@ public final class InterpreterTests extends TestFixture {
 
     // ---------------------------------------------------------------------------------------------
 
+    private void checkStmtThrows (String input, Class<? extends Throwable> expected) {
+        rule = grammar.root;
+        assertThrows(expected, () -> check("class generic { fun main(args) {" + input + "}}", null));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
     @Test
     public void testLiteralsAndUnary () {
-        rule = grammar.prefix_expression;
-//        checkExpr("", null);
         checkExpr("42", 42L);
         checkExpr("42.0", 42.0d);
         checkExpr("\"hello\"", "hello");
-//        checkExpr("(42)", 42L);
+        checkExpr("(42)", 42L);
         checkExpr("[1, 2, 3]", new Object[]{1L, 2L, 3L});
         checkExpr("true", true);
         checkExpr("false", false);
@@ -135,7 +179,6 @@ public final class InterpreterTests extends TestFixture {
 
     @Test
     public void testNumericBinary () {
-        rule = grammar.add_expr;
         checkExpr("1 + 2", 3L);
         checkExpr("2 - 1", 1L);
         checkExpr("2 * 3", 6L);
@@ -168,14 +211,13 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("2.0 % 3", 2.0d);
         checkExpr("3.0 % 2", 1.0d);
 
-//        checkExpr("2 * (4-1) * 4.0 / 6 % (2+1)", 1.0d);
+        checkExpr("2 * (4-1) * 4.0 / 6 % (2+1)", 1.0d);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testOtherBinary () {
-        rule = grammar.expression;
         checkExpr("true  && true",  true);
         checkExpr("true  || true",  true);
         checkExpr("true  || false", true);
@@ -185,6 +227,7 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("false && false", false);
         checkExpr("false || false", false);
 
+        // TODO
 //        checkExpr("1 + \"a\"", "1a");
 //        checkExpr("\"a\" + 1", "a1");
 //        checkExpr("\"a\" + true", "atrue");
@@ -197,7 +240,6 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("false == false", true);
         checkExpr("true == false", false);
         checkExpr("1 == 1.0", true);
-//        checkExpr("[1] == [1]", false);
 
         checkExpr("1 != 1", false);
         checkExpr("1 != 2", true);
@@ -209,160 +251,138 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("1 != 1.0", false);
 
         checkExpr("\"hi\" != \"hi2\"", true);
-//        checkExpr("[1] != [1]", true);
 
         // test short circuit
-//        checkExpr("true || print(\"x\") == \"y\"", true, "");
-//        checkExpr("false && print(\"x\") == \"y\"", false, "");
+        checkExpr("true || print(\"x\") == \"y\"", true, "");
+        checkExpr("false && print(\"x\") == \"y\"", false, "");
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
-    public void testVarDecl () {
-        rule = grammar.statements;
-//        check("i = 1 return i", 1L);
-//        check("x = 2.0 return x", 2d);
-//
-////        check("var x: Int = 0; return x = 3", 3L);
-////        check("var x: String = \"0\"; return x = \"S\"", "S");
-//
-//        // implicit conversions
-////        check("var x: Float = 1; x = 2; return x", 2.0d);
+    public void testParseInt () {
+        checkStmts("str=\"1\" i=int(str) return i", 1);
+        checkStmts("str=\"42\" i=int(str) return i", 42);
+        // TODO add check throws
     }
+
+    // ---------------------------------------------------------------------------------------------
+
+    @Test
+    public void testAssignments () {
+        checkStmts("a = 1             return a", 1L);
+        checkStmts("a = 1+1           return a", 2L);
+        checkStmts("a = 0   a=a+1     return a", 1L);
+        checkStmts("a = 1  b=a  a=b+1 return a", 2L);
+
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    // TODO implement test on args
+//    @Test
+//    public void testStatementsInMain () {
+////        checkStmts("return 1", 1L);
+//        checkFunctions("fun main() {return args[0]}", "");
+////        checkStmts("return args[0]", null);
+//    }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testRootAndBlock () {
-        rule = grammar.root;
-//        check("return", null);
-//        check("return 1", 1L);
-//        check("return 1 return 2", 1L);
-//
-//        check("print(\"a\")", null, "a\n");
-//        check("print(\"a\" + 1)", null, "a1\n");
-//        check("print(\"a\") print(\"b\")", null, "a\nb\n");
-//
-//        check("{ print(\"a\") print(\"b\") }", null, "a\nb\n");
-//
-//        check(
-//                "x = 1" +
-//                        "{ print(x) x = 2 print(\"\" + x) }" +
-//                        "print(\"\" + x)",
-//                null, "1\n2\n1\n");
+        checkStmts("return", null);
+        checkStmts("return 1", 1L);
+        checkStmts("return 1 return 2", 1L);
+
+        checkStmts("print(\"a\")", null, "a\n");
+//        checkStmts("print(\"a\" + 1)", null, "a1\n"); // TODO to handle (check other test)
+        checkStmts("print(\"a\") print(\"b\")", null, "a\nb\n");
+
+        checkStmts("{ print(\"a\") print(\"b\") }", null, "a\nb\n");
+
+        checkStmts("x = 1" +
+                        "if x>0 { print(x) x = 2 print(\"\" + x) }" +
+                        "print(\"\" + x)",
+                null, "1\n2\n2\n");
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testCalls () {
-//        check(
-//                "fun add (a, b) { return a + b } " +
-//                        "return add(4, 7)",
-//                11L);
+        checkStmts(
+                "fun add (a, b) { return a + b } " +
+                        "return add(4, 7)",
+                11L);
 
-//        HashMap<String, Object> point = new HashMap<>();
-//        point.put("x", 1L);
-//        point.put("y", 2L);
-//
-//        check(
-//                "struct Point { var x: Int; var y: Int }" +
-//                        "return $Point(1, 2)",
-//                point);
+        checkStmts("str = null return print(str + \" hello\")", "null hello", "null hello\n");
+        checkStmts("a = makeArray() return a", new ArrayList<>());
 
-//        check("str = null return print(str + \"hello\")", "hello", "hello\n");
+
+        checkStmts("a = makeArray() return a", new ArrayList<>());
+        checkStmts("a = makeArray() a[0] = 1 return a", new ArrayList<>(Arrays.asList(1L)));
+        checkStmts("a = makeArray() a[0] = 1 return a[0]", 1L);
+        checkStmts("a = makeArray() a[4] = \"world\" return a", new ArrayList<>(Arrays.asList(null,null,null,null,"world")));
+        checkStmts("a = makeArray() a[4] = \"world\" a[2] = \"hello\" return a", new ArrayList<>(Arrays.asList(null,null,"hello",null,"world")));
+        checkStmts("a = makeArray() b=0 a[b] = 42 return a[b]", 42L);
+        checkStmts("a = makeArray() b=14 a[b] = 42 return a[b]", 42L);
+
+        checkStmts("a = makeDict() return a", new HashMap<>());
+        checkStmts("a = makeDict() a=dictAdd(a, \"x\", 1) return a", new HashMap<>(){{put("x", 1L);}});
+        checkStmts("a = makeDict() a=dictAdd(a, \"x\", 1) b=dictGet(a, \"x\") return b", 1L);
+        checkStmts("a = makeArray() return len(a)", 0);
+        checkStmts("a = makeDict() return len(a)", 0);
+        checkStmts("a = \"b\" return len(a)", 1);
+
+        checkStmtThrows("a = 1 return len(a)", IllegalCallerException.class);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
-    public void testArrayStructAccess () {
-//        checkExpr("[1][0]", 1L);
-//        checkExpr("[1.0][0]", 1d);
-//        checkExpr("[1, 2][1]", 2L);
+    public void testArrayDictAccess () {
+        checkStmts("dict = makeDict() return dictGet(dictAdd(dict,42,\"life\"), 42)", "life");
+        checkStmts("arr = makeArray() arr[4] = \"life\" return arr[4]", "life");
 
-        // TODO check that this fails (& maybe improve so that it generates a better message?)
-        // or change to make it legal (introduce a top type, and make it a top type array if thre
-        // is no inference context available)
-        // checkExpr("[].length", 0L);
-//        checkExpr("len([1])", 1L);
-//        checkExpr("len([1, 2])", 2L);
-//
-//        checkThrows("array = null return array[0]", NullPointerException.class);
-//        checkThrows("array = null return len(array)", NullPointerException.class);
+        checkExpr("len(makeArray())", 0);
+        checkExpr("len(makeDict())", 0);
 
-//        check("var x: Int[] = [0, 1]; x[0] = 3; return x[0]", 3L);
-//        checkThrows("var x: Int[] = []; x[0] = 3; return x[0]",
-//                ArrayIndexOutOfBoundsException.class);
-//        checkThrows("var x: Int[] = null; x[0] = 3",
-//                NullPointerException.class);
-//
-//        check(
-//                "struct P { var x: Int; var y: Int }" +
-//                        "return $P(1, 2).y",
-//                2L);
-//
-//        checkThrows(
-//                "struct P { var x: Int; var y: Int }" +
-//                        "var p: P = null;" +
-//                        "return p.y",
-//                NullPointerException.class);
-//
-//        check(
-//                "struct P { var x: Int; var y: Int }" +
-//                        "var p: P = $P(1, 2);" +
-//                        "p.y = 42;" +
-//                        "return p.y",
-//                42L);
-//
-//        checkThrows(
-//                "struct P { var x: Int; var y: Int }" +
-//                        "var p: P = null;" +
-//                        "p.y = 42",
-//                NullPointerException.class);
+        checkStmtThrows("array = null return array[0]", NullPointerException.class);
+        checkStmtThrows("array = null return len(array)", NullPointerException.class);
+
+        checkStmts("a = makeArray() a[0] = 3 return a[0]", 3L);
+        checkStmtThrows("a = makeArray() a[0] = 3 return a[1]", IndexOutOfBoundsException.class);
+        checkStmtThrows("a = null a[0] = 3", NullPointerException.class);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testIfWhile () {
-        rule = grammar.statements;
-        check("a = 0 if true {a = 1} else {a = 2}", null);
-        check("a = 0 while a<=2 { a = a + 1}", null);
-//        check("if true {return 1} else {return 2}", 1L);
-//        check("if false {return 1} else {return 2}", 2L);
-//        check("if false {return 1} else if true {return 2} else {return 3} ", 2L);
-//        check("if false {return 1} else if false {return 2} else {return 3} ", 3L);
-//
-//        check("i = 0 while i < 3 { print(\"\" + i) i = i + 1 } ", null, "0\n1\n2\n");
+        checkStmts("a = 0 if true {a = 1} else {a = 2}", null);
+        checkStmts("a = 0 while a<=2 { a = 3}", null);
+        checkStmts("a = 0 while a<=2 { a = a + 3}", null);
+        checkStmts("a = 0 while a<=2 { a = a + 1}", null);
+        checkStmts("if true {return 1} else {return 2}", 1L);
+        checkStmts("if false {return 1} else {return 2}", 2L);
+        checkStmts("if false {return 1} else if true {return 2} else {return 3} ", 2L);
+        checkStmts("if false {return 1} else if false {return 2} else {return 3} ", 3L);
+
+        checkStmts("i = 0 while i < 3 { print(\"\" + i) i = i + 1 } print(\"\" + i)", null, "0\n1\n2\n3\n");
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testInference () {
-//        check("array = []", null);
-//        check("array = []", null);
-//        check("fun use_array (array) {} fun main(args) {use_array([])}", null);
-    }
-
-    // ---------------------------------------------------------------------------------------------
-
-    @Test
-    public void testTypeAsValues () {
-//        check("struct S{} ; return \"\"+ S", "S");
-//        check("struct S{} ; var type: Type = S ; return \"\"+ type", "S");
+        checkFunctions("fun use_array (array) {} fun main(args) {use_array(makeArray())}", null);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     @Test public void testUnconditionalReturn()
     {
-//        check("fun f(): Int { if (true) return 1 else return 2 } ; return f()", 1L);
+        checkStmts("fun f() { if true {return 1} else {return 2} } return f()", 1L);
     }
-
-    // ---------------------------------------------------------------------------------------------
-
-    // NOTE(norswap): Not incredibly complete, but should cover the basics.
 }

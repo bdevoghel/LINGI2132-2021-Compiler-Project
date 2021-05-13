@@ -45,6 +45,8 @@ public class KneghelGrammarTests extends AutumnTestFixture {
                                                         new IntLiteralNode(null, 1))
                                         )))
                         )));
+        success("class Hello { fun World() {return 1 return 1} }");
+        success("class Hello { fun World() {fun Other() {return \"other\"} return Other()} }");
         successExpect("class Hello { fun World() {return 1} }",
                 new ClassNode(null,
                         "Hello",
@@ -229,7 +231,7 @@ public class KneghelGrammarTests extends AutumnTestFixture {
     }
 
     @Test
-    public void testSimpleVarDef(){
+    public void testAssignment(){
         this.rule = grammar.assignment_stmt;
         success("a = 1");
         success("a = true");
@@ -244,6 +246,13 @@ public class KneghelGrammarTests extends AutumnTestFixture {
         failure("if = 1");
         successExpect("a = 1", new AssignmentNode(null, new ReferenceNode(null,"a"), new IntLiteralNode(null,1)));
         successExpect("a = true", new AssignmentNode(null,new ReferenceNode(null,"a"), new BoolLiteralNode(null,true)));
+
+        success("a = 1");
+        success("a = 1.0");
+        success("a = true");
+        success("a = null");
+        success("a = makeArray()");
+        success("a = makeDict()");
     }
 
     @Test
@@ -572,6 +581,12 @@ public class KneghelGrammarTests extends AutumnTestFixture {
                                         "bar",
                                         Arrays.asList(),
                                         new BlockNode(null, Arrays.asList(new ReturnNode(null, new IntLiteralNode(null,1))))))));
+    }
+
+    @Test
+    public void testArgs() {
+        this.rule = grammar.root;
+        // TODO check args
     }
 
     @Test
