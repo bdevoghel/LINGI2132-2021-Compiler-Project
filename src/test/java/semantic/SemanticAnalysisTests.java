@@ -116,7 +116,7 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
         failureInput("false * true");
         failureInput("false + true");
 
-        failureInput("\"a\" + 1");
+        failureInput("\"a\" + 1"); // TODO implement ??
         failureInput("\"a\" + true");
         failureInput("\"a\" * 1");
         failureInput("\"a\" * true");
@@ -192,11 +192,24 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
     @Test
     public void testIfStatement() {
         autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun bar(a, b, c) {if b && c {a = 1+2}} }");
+        successInput("class Foo { fun bar(a, b, c) {if b || c {a = 1+2}} }");
         successInput("class Foo { fun bar() {if true {a = 1+2}} }");
         successInput("class Foo { fun bar() {if true { a=2 } else { a=3 }} }");
         successInput("class Foo { fun bar(a) {if a { print(a) } }}");
         successInput("class Foo { fun bar(a) {if a == 1 { a=2 b=2 } else if a == true { a=3 } else if a == \"hello\" { a=\"world\" }} }");
         successInput("class Foo { fun bar(a, b) {if b == 2 { print(a) } }}");
+    }
+
+    @Test
+    public void testAssignment() {
+        autumnFixture.rule = grammar.root;
+        successInput("class Foo { fun bar() {a=1}}");
+        successInput("class Foo { fun bar() {a=1.0}}");
+        successInput("class Foo { fun bar() {a=true}}");
+        successInput("class Foo { fun bar() {a=null}}");
+        successInput("class Foo { fun bar() {a=makeArray()}}");
+        successInput("class Foo { fun bar() {a=makeDict()}}");
     }
 
     @Test
