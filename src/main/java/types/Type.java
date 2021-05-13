@@ -33,7 +33,7 @@ public enum Type {
     STRING,
     BOOLEAN,
     ARRAY,
-//    MAP,
+    MAP,
     NULL,
 //    FILE,
     FUNCTION,

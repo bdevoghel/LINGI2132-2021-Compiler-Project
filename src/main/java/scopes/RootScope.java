@@ -20,27 +20,19 @@ public final class RootScope extends Scope
         return decl;
     }
 
-    // ---------------------------------------------------------------------------------------------
-
-    // TODO delete : dynamically typed
-//    // root scope types
-//    public final SyntheticDeclarationNode Bool   = decl("Bool",   TYPE);
-//    public final SyntheticDeclarationNode Int    = decl("Int",    TYPE);
-//    public final SyntheticDeclarationNode Float  = decl("Float",  TYPE);
-//    public final SyntheticDeclarationNode String = decl("String", TYPE);
-//    public final SyntheticDeclarationNode Void   = decl("Void",   TYPE);
-//    public final SyntheticDeclarationNode Type   = decl("Type",   TYPE);
-
     // root scope variables
     public final SyntheticDeclarationNode _true  = decl("true",  VARIABLE);
     public final SyntheticDeclarationNode _false = decl("false", VARIABLE);
     public final SyntheticDeclarationNode _null  = decl("null",  VARIABLE);
+    public final SyntheticDeclarationNode _args  = decl("args",  VARIABLE);
 
     // root scope functions
-    public final SyntheticDeclarationNode _print     = decl("print", FUNCTION);
-    public final SyntheticDeclarationNode _int       = decl("int", FUNCTION);
-    public final SyntheticDeclarationNode _len       = decl("len", FUNCTION);
-    public final SyntheticDeclarationNode _makeDict  = decl("makeDict", FUNCTION);
+    public final SyntheticDeclarationNode _print     = decl("print",     FUNCTION);
+    public final SyntheticDeclarationNode _int       = decl("int",       FUNCTION);
+    public final SyntheticDeclarationNode _len       = decl("len",       FUNCTION);
+    public final SyntheticDeclarationNode _makeDict  = decl("makeDict",  FUNCTION);
+    public final SyntheticDeclarationNode _dictAdd   = decl("dictAdd",   FUNCTION);
+    public final SyntheticDeclarationNode _dictGet   = decl("dictGet",   FUNCTION);
     public final SyntheticDeclarationNode _makeArray = decl("makeArray", FUNCTION);
     // TODO select ours
 //    public final SyntheticDeclarationNode println    = decl("println", FUNCTION);
@@ -56,32 +48,18 @@ public final class RootScope extends Scope
 
     public RootScope (ClassNode node, Reactor reactor) {
         super(node, null);
+        reactor.set(_true,      "type",    Type.BOOLEAN);
+        reactor.set(_false,     "type",    Type.BOOLEAN);
+        reactor.set(_null,      "type",    Type.NULL);
+        reactor.set(_args,      "type",    Type.ARRAY);
 
-        // TODO delete not ours
-//        reactor.set(Bool,   "type",       TypeType.INSTANCE);
-//        reactor.set(Int,    "type",       TypeType.INSTANCE);
-//        reactor.set(Float,  "type",       TypeType.INSTANCE);
-//        reactor.set(String, "type",       TypeType.INSTANCE);
-//        reactor.set(Void,   "type",       TypeType.INSTANCE);
-//        reactor.set(Type,   "type",       TypeType.INSTANCE);
+        reactor.set(_print,     "type",    Type.FUNCTION);
+        reactor.set(_int,       "type",    Type.FUNCTION);
+        reactor.set(_len,       "type",    Type.FUNCTION);
 
-//        reactor.set(Bool,   "declared",   BoolType.INSTANCE);
-//        reactor.set(Int,    "declared",    IntType.INSTANCE);
-//        reactor.set(Float,  "declared",  FloatType.INSTANCE);
-//        reactor.set(String, "declared", StringType.INSTANCE);
-//        reactor.set(Void,   "declared",   VoidType.INSTANCE);
-//        reactor.set(Type,   "declared",   TypeType.INSTANCE);
-
-        reactor.set(_true,  "type",       Type.BOOLEAN);
-        reactor.set(_false, "type",       Type.BOOLEAN);
-        reactor.set(_null,  "type",       Type.NULL);
-
-        reactor.set(_print,  "type",       Type.FUNCTION);
-        reactor.set(_int,    "type",       Type.FUNCTION);
-        reactor.set(_len,    "type",       Type.FUNCTION);
-        reactor.set(_makeDict,"type",       Type.FUNCTION);
-        reactor.set(_makeArray,"type",       Type.FUNCTION);
+        reactor.set(_makeDict,  "type",    Type.MAP);
+        reactor.set(_dictAdd,   "type",    Type.MAP);
+        reactor.set(_dictGet,   "type",    Type.UNKNOWN_TYPE);
+        reactor.set(_makeArray, "type",    Type.ARRAY);
     }
-
-    // ---------------------------------------------------------------------------------------------
 }
