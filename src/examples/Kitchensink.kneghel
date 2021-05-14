@@ -1,67 +1,49 @@
 // This file showcases every single syntactic feature in the language.
 
 class Kitchensink {
-    fun array_add (a)
-    {
-        fun add (a, b) {
-            return add2(a, b) // works!
+    /* args = new ArrayList<String>(){{
+                        add("1");
+                        add("1");
+                    }}
+       for more detail on args, see Section 1.10 */
 
-            fun add2 (a, b) {
-                return a + b
-            }
+    fun arrayMap() {
+            new_dico = makeDict()
+            new_array = makeArray()
+
+            newest_dico = dictAdd(new_dico, "here", "a value")
+            new_array[5] = "a value" // adds the string "a value" at the index 5
+
+            return new_array[5] == dictGet(newest_dico, "here")
+    }
+
+    fun add_args(integer) {
+        return integer + int(args[0]) + int(args[1])
+    }
+
+    fun main () {
+        first_argument = int(args[0])
+        second_argument = int(args[1])
+        number_of_arguments = len(args)
+        print(first_argument + second_argument + number_of_arguments) // prints 4
+
+        x = null
+        if false || 1 + 2 * 3 <= 4 && true {
+            x = "should not be this"
+        }
+        else if 2 + 2 != 4 {
+            x = "should not be this"
+        }
+        else if arrayMap() {
+            x = "should be this"
+        }
+        else {
+            x = "should not be this"
         }
 
-        if (a.length == 0)
-            return 0
-
-        var i: Int = 1
-        var result: Int = a[0]
-
-        while i < a.length {
-            result = add(result, a[i])
-            i = i + 1
+        if x == "should be this" {
+            return add_args(5)
         }
-
-        return result
+        print("should not get here")
     }
-
-    var total: Int = array_add([1, 2, 3])
-    var float_total: Float = total + 0.0
-
-    var math: Int = 1 + 3 * 4 * (1 + 3) / 12
-    validate5(math)
-    validate5(6) // some men just want to watch the world burn
-
-    fun validate5 (value: Int)
-    {
-        if (value!= 5)
-            print("We wanted 5 but got: " + value)
-
-        if (value > 5)
-            print("It was too big.")
-        else if (value < 5)
-            print("It was too small.")
-        else
-            print("It's just right.")
-    }
-
-    struct Pair {
-        var a: Int
-        var b: Int
-    }
-
-    var type: Type = Pair
-    print("" + type)
-
-    fun sum_pair (pair: Pair): Int {
-        return pair.a + pair.b
-    }
-
-    validate5(sum_pair($Pair(2, 3)))
-
-    fun use_array (array: Int[]) {}
-
-    var intArray: Int[] = []
-    var stringArray: String[] = []
-    use_array([])
 }
