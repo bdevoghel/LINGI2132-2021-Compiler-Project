@@ -116,7 +116,7 @@ public final class Interpreter
         } catch (InterpreterException | Return | PassthroughException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new InterpreterException("exception while executing " + node, e);
+            throw new InterpreterException(e.getMessage() + "\n    exception thrown while executing " + node, e);
         }
     }
 
@@ -496,20 +496,35 @@ public final class Interpreter
         // TODO complete with reserved methods
         switch (name) {
             case "print":
+                if (args.length != 1)
+                    throw new PassthroughException(new IllegalArgumentException("print accepts exactly 1 argument"));
+
                 String out = convertToString(args[0]);
                 System.out.println(out);
                 return out;
             case "makeArray":
+                if (args.length != 0)
+                    throw new PassthroughException(new IllegalArgumentException("makeArray does not accept any argument"));
+
                 return new ArrayList<>();
             case "makeDict":
+                if (args.length != 0)
+                    throw new PassthroughException(new IllegalArgumentException("makeDict does not accept any argument"));
+
                 return new HashMap<>();
             case "dictAdd":
+                if (args.length != 3)
+                    throw new PassthroughException(new IllegalArgumentException("dictAdd accepts exactly 3 arguments"));
+
                 HashMap dicA = (HashMap) args[0];
                 Object keyA = args[1];
                 Object val = args[2];
                 dicA.put(keyA, val);
                 return dicA;
             case "dictGet":
+                if (args.length != 2)
+                    throw new PassthroughException(new IllegalArgumentException("dictGet accepts exactly 2 arguments"));
+
                 HashMap dicG = (HashMap) args[0];
                 Object keyG = args[1];
                 Object dicReturn = dicG.get(keyG);
@@ -518,6 +533,9 @@ public final class Interpreter
                 }
                 return dicReturn;
             case "len":
+                if (args.length != 1)
+                    throw new PassthroughException(new IllegalArgumentException("len accepts exactly 1 argument"));
+
                 if (args[0] instanceof ArrayList)
                     return ((ArrayList<?>) args[0]).size();
                 if (args[0] instanceof HashMap)
@@ -528,12 +546,17 @@ public final class Interpreter
                     throw new PassthroughException(new NullPointerException());
                 throw new PassthroughException(new IllegalCallerException("Could not get length of object" + args[0]));
             case "int":
+                if (args.length != 1)
+                    throw new PassthroughException(new IllegalArgumentException("int accepts exactly 1 argument"));
+
                 try {
                     return Integer.parseInt(convertToString(args[0]));
                 } catch (NumberFormatException e) {
                     throw new PassthroughException(e);
                 }
             case "randInt":
+                if (args.length != 2)
+                    throw new PassthroughException(new IllegalArgumentException("randInt accepts exactly 2 arguments"));
                 long min = (long) args[0];
                 long max = (long) args[1];
                 return min + (long) (Math.random() * (max - min + 1));

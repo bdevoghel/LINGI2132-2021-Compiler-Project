@@ -448,5 +448,8 @@ public final class InterpreterTests extends TestFixture {
             checkStmts("min=1 max=2 rand=randInt(min, max) print(rand) return min <= rand && rand <= max", true, null);
             checkStmts("min=-10 max=10 rand=randInt(min, max) print(rand) return min <= rand && rand <= max", true, null);
         }
+
+        checkStmtThrows("min=-10 max=10 rand=randInt(min, max, 3) return rand", IllegalArgumentException.class);
+        checkStmtThrows("min=-10 max=10 rand=randInt(min, \"max\") return rand", InterpreterException.class);
     }
 }
