@@ -34,6 +34,7 @@ public final class RootScope extends Scope
     public final SyntheticDeclarationNode _dictAdd   = decl("dictAdd",   FUNCTION);
     public final SyntheticDeclarationNode _dictGet   = decl("dictGet",   FUNCTION);
     public final SyntheticDeclarationNode _makeArray = decl("makeArray", FUNCTION);
+    public final SyntheticDeclarationNode _randInt   = decl("randInt",   FUNCTION);
     // TODO select ours
 //    public final SyntheticDeclarationNode println    = decl("println", FUNCTION);
 //    public final SyntheticDeclarationNode sort       = decl("sort",    FUNCTION);
@@ -61,5 +62,7 @@ public final class RootScope extends Scope
         reactor.set(_dictAdd,   "type",    Type.MAP);
         reactor.set(_dictGet,   "type",    Type.UNKNOWN_TYPE);
         reactor.set(_makeArray, "type",    Type.ARRAY);
+
+        reactor.set(_randInt,   "type",    Type.INTEGER);
     }
 }

@@ -442,4 +442,11 @@ public final class InterpreterTests extends TestFixture {
     @Test public void testUnconditionalReturn() {
         checkStmts("fun f() { if true {return 1} else {return 2} } return f()", 1L);
     }
+
+    @Test public void testRandInt() {
+        for (int i = 0; i < 100; i++) { // check on large enough sample that rand in within range
+            checkStmts("min=1 max=2 rand=randInt(min, max) print(rand) return min <= rand && rand <= max", true, null);
+            checkStmts("min=-10 max=10 rand=randInt(min, max) print(rand) return min <= rand && rand <= max", true, null);
+        }
+    }
 }

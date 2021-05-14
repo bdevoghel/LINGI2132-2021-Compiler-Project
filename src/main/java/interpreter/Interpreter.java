@@ -533,6 +533,10 @@ public final class Interpreter
                 } catch (NumberFormatException e) {
                     throw new PassthroughException(e);
                 }
+            case "randInt":
+                long min = (long) args[0];
+                long max = (long) args[1];
+                return min + (long) (Math.random() * (max - min + 1));
             default:
                 break;
         }
