@@ -247,6 +247,8 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("1 != 1.0", false);
 
         checkExpr("\"hi\" != \"hi2\"", true);
+        checkExpr("\"hi\" != \"hi\"", false);
+        checkExpr("\"hi\" == \"hi\"", true);
 
         // test short circuit
         checkExpr("true || print(\"x\") == \"y\"", true, "");

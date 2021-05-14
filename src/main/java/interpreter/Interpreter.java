@@ -141,7 +141,7 @@ public final class Interpreter
     // ---------------------------------------------------------------------------------------------
 
     private boolean isPrimitive(Object o) {
-        return o instanceof String || o instanceof Long || o instanceof Boolean;
+        return o instanceof String || o instanceof Long || o instanceof Double || o instanceof Boolean || o == STRING || o == INTEGER || o == FLOAT || o == BOOLEAN;
     }
 
     // ---------------------------------------------------------------------------------------------
