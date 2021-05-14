@@ -1,0 +1,31 @@
+# Kneghel Programming Language
+
+This source code groups the grammar, the semantic rules and the interpreter for the Kneghel language.
+
++-- build.gradle
++-- src/
+    |
+    +-- main/
+    |   |
+    |   +-- examples/
+    |       |
+    |       +-- Kitchensink.kneghel
+    |       +-- [...]
+    |
+    +-- main/
+    |   |
+    |   +-- java/
+    |       |
+    |       +-- [...]
+    |
+    +-- test/
+        |
+        +-- java/
+            |
+            +-- [...]
++-- README
+
+## Kitchensink
+
+Please have a look at the Kitchensink.kneghel file in src/examples/ for an overview of all features.
+It can be executed using the tests in KneghelExampleInterpreterTests.

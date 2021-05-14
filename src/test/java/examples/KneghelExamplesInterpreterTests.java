@@ -193,10 +193,8 @@ public class KneghelExamplesInterpreterTests extends TestFixture {
     public void testKitchensink() {
         rule = grammar.root;
         check(readFile("Kitchensink.kneghel"),
-                new ArrayList<String>(){{
-                    add("7");
-                }},
-                "4\n",
+                7L,
+                "4\n1.0\nshould be this\n",
                 new ArrayList<String>(){{
                     add("1");
                     add("1");
