@@ -22,7 +22,7 @@ public class AssignmentNode extends DeclarationNode
         } else if (left instanceof ArrayAccessNode && ((ArrayAccessNode) left).array instanceof ReferenceNode) {
             return ((ReferenceNode) ((ArrayAccessNode) left).array).name;
         } else {
-            throw new RuntimeException("NOT YET IMPLEMENTED"); // TODO
+            throw new RuntimeException("NOT YET IMPLEMENTED"); // add when more types are compatible
         }
     }
 

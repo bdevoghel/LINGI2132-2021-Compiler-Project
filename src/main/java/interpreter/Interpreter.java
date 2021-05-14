@@ -160,7 +160,7 @@ public final class Interpreter
 
     private Boolean boolLiteral (BoolLiteralNode node) { return node.value;}
 
-    private Object nullLiteral (NullLiteralNode node) {return Null.INSTANCE;}
+    private Object nullLiteral (NullLiteralNode node) {return Null.INSTANCE;} // TODO replace by null ?
 
     // ---------------------------------------------------------------------------------------------
 

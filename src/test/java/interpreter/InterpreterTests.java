@@ -31,7 +31,6 @@ import static org.testng.Assert.assertThrows;
 
 public final class InterpreterTests extends TestFixture {
 
-    // TODO peeling
 
     // ---------------------------------------------------------------------------------------------
 
@@ -68,9 +67,6 @@ public final class InterpreterTests extends TestFixture {
     }
 
     private void check (rule rule, String input, Object expectedReturn, String expectedOutput, ArrayList<String> args) {
-        // TODO
-        // (1) write proper parsing tests
-        // (2) write some kind of automated runner, and use it here
 
         autumnFixture.rule = rule;
         ParseResult parseResult = autumnFixture.success(input);
@@ -381,8 +377,7 @@ public final class InterpreterTests extends TestFixture {
 
     // ---------------------------------------------------------------------------------------------
 
-    @Test public void testUnconditionalReturn()
-    {
+    @Test public void testUnconditionalReturn() {
         checkStmts("fun f() { if true {return 1} else {return 2} } return f()", 1L);
     }
 }

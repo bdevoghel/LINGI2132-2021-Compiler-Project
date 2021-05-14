@@ -71,7 +71,7 @@ public final class ScopeStorage
     }
 
     void initRoot(RootScope root, ArrayList<String> args)
-        {
+    {
         set(root, root._true  .name(), true);
         set(root, root._false .name(), false);
         set(root, root._null  .name(), Null.INSTANCE);
@@ -79,9 +79,6 @@ public final class ScopeStorage
         set(root, root._args  .name(), args);
 
         // TODO to complete with our own ??
-
-        // Function and types are not assigned values in frames - instead they derive
-        // their runtime value values from the corresponding DeclarationNode.
     }
 
     // ---------------------------------------------------------------------------------------------

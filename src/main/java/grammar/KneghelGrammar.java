@@ -216,9 +216,6 @@ public class KneghelGrammar extends Grammar
                         if ($.$[0] instanceof FunCallNode) {
                             $.push(new ExpressionStatementNode($.span(), $.$[0]));
                             return true;
-                        } else if ($.$[0] instanceof AssignmentNode) { // TODO still needed ? clean up
-                            $.push($.$[0]);
-                            return true;
                         } else {
                             return false;
                         }
@@ -233,7 +230,7 @@ public class KneghelGrammar extends Grammar
 //            seq(array_type);
 
     public rule assignment_stmt = left_expression()
-            .left(seq(reference, array.or_push_null())) // TODO complete with idexer_accss ??
+            .left(seq(reference, array.or_push_null()))
             .infix(EQUALS)
             .right(expression)
             .requireOperator()
