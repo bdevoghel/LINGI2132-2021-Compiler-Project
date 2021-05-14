@@ -274,39 +274,53 @@ public final class Interpreter
             fleft = fright = 0;
         }
 
-        Object result;
-        if (floating)
-            switch (node.operator) {
-                case MULTIPLY:      return fleft *  fright;
-                case DIVIDE:        return fleft /  fright;
-                case REMAINDER:     return fleft %  fright;
-                case ADD:           return fleft +  fright;
-                case SUBTRACT:      return fleft -  fright;
-                case GREATER:       return fleft >  fright;
-                case LOWER:         return fleft <  fright;
-                case GREATER_EQUAL: return fleft >= fright;
-                case LOWER_EQUAL:   return fleft <= fright;
-                case EQUALITY:      return fleft == fright;
-                case NOT_EQUALS:    return fleft != fright;
-                default:
-                    throw new Error("should not reach here");
-            }
-        else
-            switch (node.operator) {
-                case MULTIPLY:      return ileft *  iright;
-                case DIVIDE:        return ileft /  iright;
-                case REMAINDER:     return ileft %  iright;
-                case ADD:           return ileft +  iright;
-                case SUBTRACT:      return ileft -  iright;
-                case GREATER:       return ileft >  iright;
-                case LOWER:         return ileft <  iright;
-                case GREATER_EQUAL: return ileft >= iright;
-                case LOWER_EQUAL:   return ileft <= iright;
-                case EQUALITY:      return ileft == iright;
-                case NOT_EQUALS:    return ileft != iright;
-                default:
-                    throw new Error("should not reach here");
-            }
+        try {
+            if (floating)
+                switch (node.operator) {
+                    case MULTIPLY:
+                        return fleft * fright;
+                    case DIVIDE:
+                        return fleft / fright;
+                    case REMAINDER:
+                        return fleft % fright;
+                    case ADD:
+                        return fleft + fright;
+                    case SUBTRACT:
+                        return fleft - fright;
+                    case GREATER:
+                        return fleft > fright;
+                    case LOWER:
+                        return fleft < fright;
+                    case GREATER_EQUAL:
+                        return fleft >= fright;
+                    case LOWER_EQUAL:
+                        return fleft <= fright;
+                    case EQUALITY:
+                        return fleft == fright;
+                    case NOT_EQUALS:
+                        return fleft != fright;
+                    default:
+                        throw new Error("should not reach here");
+                }
+            else
+                switch (node.operator) {
+                    case MULTIPLY:      return ileft *  iright;
+                    case DIVIDE:        return ileft /  iright;
+                    case REMAINDER:     return ileft %  iright;
+                    case ADD:           return ileft +  iright;
+                    case SUBTRACT:      return ileft -  iright;
+                    case GREATER:       return ileft >  iright;
+                    case LOWER:         return ileft <  iright;
+                    case GREATER_EQUAL: return ileft >= iright;
+                    case LOWER_EQUAL:   return ileft <= iright;
+                    case EQUALITY:      return ileft == iright;
+                    case NOT_EQUALS:    return ileft != iright;
+                    default:
+                        throw new Error("should not reach here");
+                }
+        } catch (ArithmeticException e) {
+            throw new PassthroughException(e);
+        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -381,9 +395,9 @@ public final class Interpreter
             case NEG:
                 Type type  = reactor.get(node.operand, "type");
                 if (type == INTEGER)
-                    return - (int) get(node.operand);
+                    return - (long) get(node.operand);
                 else if (type == FLOAT)
-                    return - (float) get(node.operand);
+                    return - (double) get(node.operand);
             default:
                 break;
         }
@@ -514,7 +528,11 @@ public final class Interpreter
                     throw new PassthroughException(new NullPointerException());
                 throw new PassthroughException(new IllegalCallerException("Could not get length of object" + args[0]));
             case "int":
-                return Integer.parseInt(convertToString(args[0]));
+                try {
+                    return Integer.parseInt(convertToString(args[0]));
+                } catch (NumberFormatException e) {
+                    throw new PassthroughException(e);
+                }
             default:
                 break;
         }

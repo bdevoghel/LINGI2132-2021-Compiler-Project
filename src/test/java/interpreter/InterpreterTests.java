@@ -31,7 +31,6 @@ import static org.testng.Assert.assertThrows;
 
 public final class InterpreterTests extends TestFixture {
 
-
     // ---------------------------------------------------------------------------------------------
 
     private final KneghelGrammar grammar = new KneghelGrammar();
@@ -103,28 +102,28 @@ public final class InterpreterTests extends TestFixture {
 
     private void checkExpr (String input, Object expectedReturn, String expectedOutput) {
         rule = grammar.root;
-        check("class generic { fun main(args) {return " + input + "}}", expectedReturn, expectedOutput);
+        check("class generic { fun main() {return " + input + "}}", expectedReturn, expectedOutput);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     private void checkExpr (String input, Object expectedReturn) {
         rule = grammar.root;
-        check("class generic { fun main(args) {return " + input + "}}", expectedReturn);
+        check("class generic { fun main() {return " + input + "}}", expectedReturn);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     private void checkStmts (String input, Object expectedReturn, String expectedOutput) {
         rule = grammar.root;
-        check("class generic { fun main(args) {" + input + "}}", expectedReturn, expectedOutput);
+        check("class generic { fun main() {" + input + "}}", expectedReturn, expectedOutput);
     }
 
     // ---------------------------------------------------------------------------------------------
 
     private void checkStmts (String input, Object expectedReturn) {
         rule = grammar.root;
-        check("class generic { fun main(args) {" + input + "}}", expectedReturn);
+        check("class generic { fun main() {" + input + "}}", expectedReturn);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -152,6 +151,13 @@ public final class InterpreterTests extends TestFixture {
     private void checkStmtThrows (String input, Class<? extends Throwable> expected) {
         rule = grammar.root;
         assertThrows(expected, () -> check("class generic { fun main(args) {" + input + "}}", null));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void checkExprThrows (String input, Class<? extends Throwable> expected) {
+        rule = grammar.root;
+        assertThrows(expected, () -> check("class generic { fun main(args) { return " + input + "}}", null));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -208,6 +214,24 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("3.0 % 2", 1.0d);
 
         checkExpr("2 * (4-1) * 4.0 / 6 % (2+1)", 1.0d);
+    }
+
+    @Test
+    public void testDivideByZero () {
+        checkExprThrows("5 / 0", ArithmeticException.class);
+        checkExprThrows("5 / 0", ArithmeticException.class);
+
+        checkExpr("5.0 / 0", Double.POSITIVE_INFINITY);
+        checkExpr("5 / 0.0", Double.POSITIVE_INFINITY);
+        checkExpr("5.0 / 0.0", Double.POSITIVE_INFINITY);
+
+        checkExpr("-5.0 / 0", Double.NEGATIVE_INFINITY);
+        checkExpr("-5 / 0.0", Double.NEGATIVE_INFINITY);
+        checkExpr("-5.0 / 0.0", Double.NEGATIVE_INFINITY);
+
+        checkExpr("5.0 / -0", Double.POSITIVE_INFINITY);
+        checkExpr("5 / -0.0", Double.NEGATIVE_INFINITY);
+        checkExpr("5.0 / -0.0", Double.NEGATIVE_INFINITY);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -267,12 +291,31 @@ public final class InterpreterTests extends TestFixture {
     // ---------------------------------------------------------------------------------------------
 
     @Test
-    public void testAssignments () {
+    public void testSimpleAssignments () {
         checkStmts("a = 1             return a", 1L);
         checkStmts("a = 1+1           return a", 2L);
         checkStmts("a = 0   a=a+1     return a", 1L);
         checkStmts("a = 1  b=a  a=b+1 return a", 2L);
+    }
 
+    @Test
+    public void testAssignment() {
+        rule = grammar.root;
+        check("class Foo { fun main() {a=1 return a}}", 1L, null);
+        check("class Foo { fun main() {a=1.0 return a}}", 1.0d, null);
+        check("class Foo { fun main() {a=true return a}}", true, null);
+        check("class Foo { fun main() {a=null return a}}", Null.INSTANCE, null);
+
+        check("class Foo { fun main() {a=makeArray() return a}}", new ArrayList<>(), null);
+        check("class Foo { fun main() {a=makeArray() a[5]=makeArray() return a}}", new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(new ArrayList<>());}}, null); // array within array
+        check("class Foo { fun main() {a=makeArray() a[5]=makeArray() b=a[5] b[5]=25 print(a)}}", null, "[null, null, null, null, null, [null, null, null, null, null, 25]]\n"); // TODO make it possible to access a[5][5] // new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(25);}});}}
+        check("class Foo { fun main() {a=makeArray() a[5]=makeDict() return a}}", new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(new HashMap<>());}}, null); // map within array
+
+        check("class Foo { fun main() {a=makeDict() return a}}", new HashMap<>(), null);
+        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeArray()) return a}}", new HashMap<>(){{put("key", new ArrayList<>());}}, null); // array within map
+        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeDict()) return a}}", new HashMap<>(){{put("key", new HashMap<>());}}, null); // map within map
+
+        check("class Foo { fun main() {a=1 a=true a=2.0 a=\"hello\" a=null return a}}", Null.INSTANCE, null);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -321,19 +364,36 @@ public final class InterpreterTests extends TestFixture {
         checkStmts("a = makeArray() return a", new ArrayList<>());
         checkStmts("a = makeArray() a[0] = 1 return a", new ArrayList<>(Arrays.asList(1L)));
         checkStmts("a = makeArray() a[0] = 1 return a[0]", 1L);
-        checkStmts("a = makeArray() a[4] = \"world\" return a", new ArrayList<>(Arrays.asList(null,null,null,null,"world")));
-        checkStmts("a = makeArray() a[4] = \"world\" a[2] = \"hello\" return a", new ArrayList<>(Arrays.asList(null,null,"hello",null,"world")));
+        checkStmts("a = makeArray() a[4] = \"world\" return a", new ArrayList<>(Arrays.asList(null, null, null, null, "world")));
+        checkStmts("a = makeArray() a[4] = \"world\" a[2] = \"hello\" return a", new ArrayList<>(Arrays.asList(null, null, "hello", null, "world")));
         checkStmts("a = makeArray() b=0 a[b] = 42 return a[b]", 42L);
         checkStmts("a = makeArray() b=14 a[b] = 42 return a[b]", 42L);
 
         checkStmts("a = makeDict() return a", new HashMap<>());
-        checkStmts("a = makeDict() a=dictAdd(a, \"x\", 1) return a", new HashMap<>(){{put("x", 1L);}});
+        checkStmts("a = makeDict() a=dictAdd(a, \"x\", 1) return a", new HashMap<>() {{
+            put("x", 1L);
+        }});
         checkStmts("a = makeDict() a=dictAdd(a, \"x\", 1) b=dictGet(a, \"x\") return b", 1L);
         checkStmts("a = makeArray() return len(a)", 0);
         checkStmts("a = makeDict() return len(a)", 0);
         checkStmts("a = \"b\" return len(a)", 1);
 
         checkStmtThrows("a = 1 return len(a)", IllegalCallerException.class);
+    }
+
+    @Test
+    public void testPrint () {
+        checkStmts("print(\"a\")", null, "a\n");
+        checkStmts("print(1)", null, "1\n");
+        checkStmts("print(true)", null, "true\n");
+        checkStmts("print(null)", null, "null\n");
+        checkStmts("print(args)", null, "[]\n"); // when given no arguments (empty array)
+
+        checkStmts("print(print)", null, "SyntheticDeclaration{\'print\'}\n"); // as do other builtin functions
+        checkStmts("print(makeArray)", null, "SyntheticDeclaration{\'makeArray\'}\n");
+
+        checkStmts("print(makeArray())", null, "[]\n");
+        checkStmts("print(makeDict())", null, "{}\n");
     }
 
     // ---------------------------------------------------------------------------------------------

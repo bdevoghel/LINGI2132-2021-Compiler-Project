@@ -208,8 +208,18 @@ public class SemanticAnalysisTests extends UraniumTestFixture {
         successInput("class Foo { fun bar() {a=1.0}}");
         successInput("class Foo { fun bar() {a=true}}");
         successInput("class Foo { fun bar() {a=null}}");
+
         successInput("class Foo { fun bar() {a=makeArray()}}");
+        successInput("class Foo { fun bar() {a=makeArray() a[5]=makeArray()}}"); // array within array
+        successInput("class Foo { fun bar() {a=makeArray() a[5]=makeArray() b=a[5] b[5]=25}}"); // TODO make it possible to access a[5][5]
+        successInput("class Foo { fun bar() {a=makeArray() a[5]=makeArray() a[5,5]=25}}");
+        successInput("class Foo { fun bar() {a=makeArray() a[5]=makeDict()}}"); // map within array
+
         successInput("class Foo { fun bar() {a=makeDict()}}");
+        successInput("class Foo { fun bar() {a=makeDict() dictAdd(a, \"key\", makeArray())}}"); // array within map
+        successInput("class Foo { fun bar() {a=makeDict() dictAdd(a, \"key\", makeDict())}}"); // map within map
+
+        successInput("class Foo { fun bar() {a=1 a=true a=2.0 a=\"hello\" a=null}}");
     }
 
     @Test
