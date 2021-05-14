@@ -312,8 +312,8 @@ public final class InterpreterTests extends TestFixture {
         check("class Foo { fun main() {a=makeArray() a[5]=makeDict() return a}}", new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(new HashMap<>());}}, null); // map within array
 
         check("class Foo { fun main() {a=makeDict() return a}}", new HashMap<>(), null);
-        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeArray()) return a}}", new HashMap<>(){{put("key", new ArrayList<>());}}, null); // array within map
-        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeDict()) return a}}", new HashMap<>(){{put("key", new HashMap<>());}}, null); // map within map
+        check("class Foo { fun main() {a=makeDict() a=dictAdd(a, \"key\", makeArray()) return a}}", new HashMap<>(){{put("key", new ArrayList<>());}}, null); // array within map
+        check("class Foo { fun main() {a=makeDict() a=dictAdd(a, \"key\", makeDict()) return a}}", new HashMap<>(){{put("key", new HashMap<>());}}, null); // map within map
 
         check("class Foo { fun main() {a=1 a=true a=2.0 a=\"hello\" a=null return a}}", Null.INSTANCE, null);
     }
