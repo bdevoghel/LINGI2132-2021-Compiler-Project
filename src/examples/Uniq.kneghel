@@ -6,7 +6,7 @@ class Uniq {
         while i < len(args) {
             if dictGet(m, args[i]) == null {
                 print(args[i])
-                dictAdd(m, args[i], true)
+                m = dictAdd(m, args[i], true)
             }
             i = i + 1
         }
