@@ -37,9 +37,12 @@ public class KneghelExamplesInterpreterTests extends TestFixture {
 
     private Grammar.rule rule;
 
-    private void check(String input, Object expectedReturn, String expectedOutput) {
-        assertNotNull(rule, "You forgot to initialize the rule field.");
-        check(rule, input, expectedReturn, expectedOutput);
+    private void checkThrows (String input, Class<? extends Throwable> expected, ArrayList<String> args) {
+        assertThrows(expected, () -> check(input, null, args));
+    }
+
+    private void check(String input, Object expectedReturn, ArrayList<String> args) {
+        check(input, expectedReturn, null, args);
     }
 
     private void check(String input, Object expectedReturn, String expectedOutput, ArrayList<String> args) {
@@ -128,6 +131,11 @@ public class KneghelExamplesInterpreterTests extends TestFixture {
                 new ArrayList<String>(){{
                     add("10");
                 }});
+        checkThrows(readFile("Prime.kneghel"),
+                NumberFormatException.class,
+                new ArrayList<String>(){{
+                    add("x");
+                }});
     }
 
     @Test
@@ -150,16 +158,34 @@ public class KneghelExamplesInterpreterTests extends TestFixture {
     public void testUniq() {
         rule = grammar.root;
         check(readFile("Uniq.kneghel"),
-//                new ArrayList() {{
-//                    add(1);
-//                    add(3);
-//                    add(5); }},
                 null,
                 "1\n3\n5\n",
                 new ArrayList<String>(){{
                     add("1");
+                    add("1");
+                    add("3");
+                    add("1");
                     add("3");
                     add("5");
+                    add("1");
+                    add("5");
+                    add("3");
+                    add("5");
+                }});
+        check(readFile("Uniq.kneghel"),
+                null,
+                "a\nb\nc\n",
+                new ArrayList<String>(){{
+                    add("a");
+                    add("a");
+                    add("b");
+                    add("a");
+                    add("b");
+                    add("c");
+                    add("a");
+                    add("c");
+                    add("b");
+                    add("c");
                 }});
     }
 }
