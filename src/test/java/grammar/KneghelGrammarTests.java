@@ -413,6 +413,8 @@ public class KneghelGrammarTests extends AutumnTestFixture {
     @Test
     public void testConditions() {
         this.rule = grammar.if_stmt;
+        failure("if 1 == 2  a=3 ");
+        success("if 1 == 2 { a=3 }");
         successExpect("if 1 == 2 { a=3 }",
                 new IfNode(null,
                         new BinaryExpressionNode(null,new IntLiteralNode(null,1), EQUALITY, new IntLiteralNode(null,2)),

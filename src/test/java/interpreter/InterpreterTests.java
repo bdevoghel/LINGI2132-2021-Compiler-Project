@@ -312,8 +312,8 @@ public final class InterpreterTests extends TestFixture {
         check("class Foo { fun main() {a=makeArray() a[5]=makeDict() return a}}", new ArrayList<>(){{add(null);add(null);add(null);add(null);add(null);add(new HashMap<>());}}, null); // map within array
 
         check("class Foo { fun main() {a=makeDict() return a}}", new HashMap<>(), null);
-        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeArray()) return a}}", new HashMap<>(){{put("key", new ArrayList<>());}}, null); // array within map
-        check("class Foo { fun main() {a=makeDict() dictAdd(a, \"key\", makeDict()) return a}}", new HashMap<>(){{put("key", new HashMap<>());}}, null); // map within map
+        check("class Foo { fun main() {a=makeDict() a=dictAdd(a, \"key\", makeArray()) return a}}", new HashMap<>(){{put("key", new ArrayList<>());}}, null); // array within map
+        check("class Foo { fun main() {a=makeDict() a=dictAdd(a, \"key\", makeDict()) return a}}", new HashMap<>(){{put("key", new HashMap<>());}}, null); // map within map
 
         check("class Foo { fun main() {a=1 a=true a=2.0 a=\"hello\" a=null return a}}", Null.INSTANCE, null);
     }
@@ -352,6 +352,10 @@ public final class InterpreterTests extends TestFixture {
 
     @Test
     public void testCalls () {
+        checkStmts("fun foo() {} return print(\"\")", "", "\n");
+        checkStmts("fun foo() {} return foo()", null, null);
+        checkStmts("fun foo() {} a=1 return foo(a)", null, null); // interesting observation
+        checkStmts("fun foo(b) {return b} a=1 return foo()", null, null);
         checkStmts(
                 "fun add (a, b) { return a + b } " +
                         "return add(4, 7)",
@@ -419,15 +423,48 @@ public final class InterpreterTests extends TestFixture {
     @Test
     public void testIfWhile () {
         checkStmts("a = 0 if true {a = 1} else {a = 2}", null);
+        checkStmtThrows("if false {a = 1} b = a", AssertionError.class); // accessing a outside of scope
         checkStmts("a = 0 while a<=2 { a = 3}", null);
         checkStmts("a = 0 while a<=2 { a = a + 3}", null);
         checkStmts("a = 0 while a<=2 { a = a + 1}", null);
+        checkStmts("x = null\n" +
+                "if false || 1 + 2 * 3 <= 4 && true {\n" +
+                "    x = \"should not be this\"\n" +
+                "}\n" +
+                "else if 2 + 2 != 4 {\n" +
+                "    x = \"should not be this\"\n" +
+                "}\n" +
+                "else if 2 + 2 == 4 {\n" +
+                "    x = \"should be this\"\n" +
+                "}\n" +
+                "else {\n" +
+                "    x = \"should not be this\"\n" +
+                "} return x","should be this");
         checkStmts("if true {return 1} else {return 2}", 1L);
         checkStmts("if false {return 1} else {return 2}", 2L);
         checkStmts("if false {return 1} else if true {return 2} else {return 3} ", 2L);
         checkStmts("if false {return 1} else if false {return 2} else {return 3} ", 3L);
 
         checkStmts("i = 0 while i < 3 { print(\"\" + i) i = i + 1 } print(\"\" + i)", null, "0\n1\n2\n3\n");
+        checkStmts("a = 1\n" +
+                "b = 0\n" +
+                "while false || 1 + 2 * 3 <= 4 && true || a <= 3 {\n" +
+                "    c = b\n" +
+                "    b = c + a\n" +
+                "    a = a + 1\n" +
+                "}\n" +
+                "print(a) print(b)", null, "4\n6\n");
+    }
+
+    @Test
+    public void testConditionEvaluation() {
+        checkStmts("a=0" +
+                        "fun no() {print(\"should not get here\") return true}" +
+                        "fun yes() {print(\"should get here\") return false} " +
+                        "if true || no() {a=a+1} " +
+                        "if yes() && no() {a=a-1} " +
+                        "return a",
+                1L, "should get here\n");
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -516,7 +516,7 @@ public final class Interpreter
                 if (args.length != 3)
                     throw new PassthroughException(new IllegalArgumentException("dictAdd accepts exactly 3 arguments"));
 
-                HashMap dicA = (HashMap) args[0];
+                HashMap dicA = new HashMap((HashMap) args[0]);
                 Object keyA = args[1];
                 Object val = args[2];
                 dicA.put(keyA, val);

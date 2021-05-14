@@ -287,12 +287,12 @@ public class KneghelGrammar extends Grammar
 //            seq(_struct, identifier, struct_body)
 //                    .push($ -> new StructDeclarationNode($.span(), $.$[0], $.$[1]));
 
-    public rule if_stmt =
-            seq(_if, expression, statement, seq(_else, statement).or_push_null())
-                    .push($ -> new IfNode($.span(), $.$[0], $.$[1], $.$[2]));
+    public rule if_stmt = lazy(() ->
+            seq(_if, expression, block, seq(_else, choice(block, this.if_stmt)).or_push_null())
+                    .push($ -> new IfNode($.span(), $.$[0], $.$[1], $.$[2])));
 
     public rule while_stmt =
-            seq(_while, expression, statement)
+            seq(_while, expression, block)
                     .push($ -> new WhileNode($.span(), $.$[0], $.$[1]));
 
     public rule return_stmt =
